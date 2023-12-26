@@ -1,2 +1,4 @@
 .env
 server/restaurant.log
+log/restaurant.log
+bin/
