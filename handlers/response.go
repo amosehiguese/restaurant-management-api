@@ -1,13 +1,13 @@
 package handlers
 
 type response struct {
-	Success bool 	`json:"success"`
-	Data	any 	`json:"data"`
+	Status string 	`json:"status"`
+	Data	any 	`json:"data,omitempty"`
 }
 
-func NewResp(success bool, data any) *response {
+func NewResp(status string, data any) *response {
 	return &response{
-		Success: success,
+		Status: status,
 		Data: data,
 	}
 }

@@ -1,2 +1,0 @@
-{"level":"info","time":"2023-12-20T06:45:19.795+0100","caller":"server/server.go:61","msg":"Serving request over 127.0.0.1:8080\n"}
-{"level":"info","time":"2023-12-20T08:12:45.569+0100","caller":"server/server.go:58","msg":"Serving request over 127.0.0.1:8080\n"}

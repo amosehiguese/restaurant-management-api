@@ -8,9 +8,11 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/amosehiguese/restaurant-api/handlers"
 	"github.com/amosehiguese/restaurant-api/log"
-
-	"github.com/amosehiguese/restaurant-api/routes"
+	"github.com/amosehiguese/restaurant-api/store"
+	_ "github.com/amosehiguese/restaurant-api/store"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 
@@ -24,19 +26,14 @@ var (
 func Run() error {
 	flag.Parse()
 
-	mux := http.NewServeMux()
 	l := log.NewLog()
 
 	srv := &http.Server{
 		Addr: *socketAddr,
-		Handler: mux,
+		Handler: http.HandlerFunc(handlers.Serve),
 		IdleTimeout: 5 * time.Minute,
 		ReadHeaderTimeout: time.Minute,
 	}
-
-
-	mux.HandleFunc("/menu/", routes.HandleMenuRequest)
-
 	
 	done := make(chan struct{})
 
@@ -47,7 +44,7 @@ func Run() error {
 		for {
 			if <-sigChan == os.Interrupt{
 				if err := srv.Shutdown(context.Background()); err != nil {
-					l.Log.Sugar().Infof("shutting down... -->%v",err )
+					l.Infof("shutting down... -->%v",err )
 				}
 				close(done)
 				return
@@ -55,12 +52,13 @@ func Run() error {
 		}
 	}()
 
-	l.Log.Sugar().Infof("Serving request over %s\n", srv.Addr)
+	l.Infof("Serving request over %s\n", srv.Addr)
+	store.SetUpDB()
 	
 	var err error 
 
 	if *cert != "" && *pkey != "" {
-		l.Log.Info("TLS enabled")
+		l.Info("TLS enabled")
 		err = srv.ListenAndServeTLS(*cert, *pkey)
 	} else {
 		err = srv.ListenAndServe()

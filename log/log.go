@@ -3,7 +3,6 @@ package log
 import (
 	"log"
 	"os"
-	"runtime"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -29,7 +28,7 @@ type logger struct {
 }
 
 func NewLog() *logger  {
-	file, err := os.OpenFile("restaurant.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	file, err := os.OpenFile("log/restaurant.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalln("Failed to open log file", err)
 	}
@@ -41,10 +40,7 @@ func NewLog() *logger  {
 			zapcore.Lock(os.Stdout),
 			zapcore.DebugLevel,
 		),
-		zap.AddCaller(),
-		zap.Fields(
-			zap.String("version", runtime.Version()),
-		),
+
 	)
 
 	l.Log = l.Log.WithOptions(
@@ -66,4 +62,32 @@ func NewLog() *logger  {
 	}()
 
 	return &l
+}
+
+func (l *logger) Info(msg string) {
+	l.Log.Info(msg)
+}
+func (l *logger) Infof(msg string, args ...any) {
+	l.Log.Sugar().Infof(msg, args...)
+}
+func (l *logger) Infoln(msg ...any) {
+	l.Log.Sugar().Infoln(msg...)
+}
+func (l *logger) Error(msg string) {
+	l.Log.Error(msg)
+}
+func (l *logger) Errorf(msg string, args ...any) {
+	l.Log.Sugar().Errorf(msg, args...)
+}
+func (l *logger) Errorln(msg ...any) {
+	l.Log.Sugar().Errorln(msg...)
+}
+func (l *logger) Debug(msg string) {
+	l.Log.Debug(msg)
+}
+func (l *logger) Debugf(msg string, args ...any ) {
+	l.Log.Sugar().Debugf(msg, args...)
+}
+func (l *logger) Debugln(msg ...any) {
+	l.Log.Sugar().Debugln(msg...)
 }
