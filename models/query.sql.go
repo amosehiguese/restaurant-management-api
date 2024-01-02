@@ -890,18 +890,16 @@ func (q *Queries) RetrieveUserByEmail(ctx context.Context, email string) (User, 
 
 const updateInvoice = `-- name: UpdateInvoice :exec
 update invoice
-set invoice_date = $3,
-total_amount = $4,
-tax = $5,
-discount = $6,
-grand_total = $7
+set total_amount = $3,
+tax = $4,
+discount = $5,
+grand_total = $6
 where id = $1 and order_id = $2
 `
 
 type UpdateInvoiceParams struct {
 	ID          uuid.UUID `json:"id"`
 	OrderID     uuid.UUID `json:"order_id"`
-	InvoiceDate time.Time `json:"invoice_date"`
 	TotalAmount string    `json:"total_amount"`
 	Tax         string    `json:"tax"`
 	Discount    string    `json:"discount"`
@@ -912,7 +910,6 @@ func (q *Queries) UpdateInvoice(ctx context.Context, arg UpdateInvoiceParams) er
 	_, err := q.db.ExecContext(ctx, updateInvoice,
 		arg.ID,
 		arg.OrderID,
-		arg.InvoiceDate,
 		arg.TotalAmount,
 		arg.Tax,
 		arg.Discount,
@@ -982,17 +979,39 @@ func (q *Queries) UpdateOrder(ctx context.Context, arg UpdateOrderParams) error 
 	return err
 }
 
+const updateOrderItem = `-- name: UpdateOrderItem :exec
+update orderItem
+set quantity = $4
+where id = $1 and order_id = $2 and dish_id = $3
+`
+
+type UpdateOrderItemParams struct {
+	ID       uuid.UUID `json:"id"`
+	OrderID  uuid.UUID `json:"order_id"`
+	DishID   uuid.UUID `json:"dish_id"`
+	Quantity int32     `json:"quantity"`
+}
+
+func (q *Queries) UpdateOrderItem(ctx context.Context, arg UpdateOrderItemParams) error {
+	_, err := q.db.ExecContext(ctx, updateOrderItem,
+		arg.ID,
+		arg.OrderID,
+		arg.DishID,
+		arg.Quantity,
+	)
+	return err
+}
+
 const updateReservation = `-- name: UpdateReservation :exec
 update reservation
-set reservation_date = $3,
-reservation_time = $4,
-status = $5
-where id = $1 and table_id = $2
+set reservation_date = $2,
+reservation_time = $3,
+status = $4
+where id = $1
 `
 
 type UpdateReservationParams struct {
 	ID              uuid.UUID         `json:"id"`
-	TableID         uuid.UUID         `json:"table_id"`
 	ReservationDate time.Time         `json:"reservation_date"`
 	ReservationTime time.Time         `json:"reservation_time"`
 	Status          ReservationStatus `json:"status"`
@@ -1001,7 +1020,6 @@ type UpdateReservationParams struct {
 func (q *Queries) UpdateReservation(ctx context.Context, arg UpdateReservationParams) error {
 	_, err := q.db.ExecContext(ctx, updateReservation,
 		arg.ID,
-		arg.TableID,
 		arg.ReservationDate,
 		arg.ReservationTime,
 		arg.Status,

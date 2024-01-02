@@ -23,16 +23,14 @@ func routes(r *chi.Mux) {
 
 		// orders
 		r.Get("/orders", GetAllOrders)
-		r.Post("/menu/{id}/dishes/{dishID}/order", CreateOrder)
+		r.Post("/orders", CreateOrder)
 		r.Get("/orders/{id}", RetrieveOrder)
 		r.Patch("/orders/{id}", UpdateOrder)
 		r.Delete("/orders/{id}", DeleteOrder)
 
-		r.Post("/orders/{id}/invoice", CreateInvoice)
-		r.Patch("orders/{id}/invoices/{invoiceID}", UpdateInvoice)
-
-
+		// orderItems
 		r.Get("/orders/{id}/items", GetAllOrderItems)
+		r.Put("/orders/{id}/items/{itemID}", CreateOrUpdateOrderItem)
 		r.Delete("/orders/{id}/items/{itemID}", RemoveSpecificOrderItem)
 		
 		// tables
@@ -43,21 +41,21 @@ func routes(r *chi.Mux) {
 		r.Delete("/tables/{id}", DeleteTable)
 
 		// reservations
-		// r.Get("/reservations", GetAllReservations)
-		// r.Post("/table/{id}/reservations/make", CreateReservation)
-		// r.Get("/reservations/{id}", RetrieveReservation)
-		// r.Patch("/table/{id}/reservations/{reservationID}", UpdateReservation)
-		// r.Delete("/reservations/{id}/cancel", CancelReservation)
-
-		// r.Post("/reservations/check-availability", CheckReservations)
-		// r.Post("/reservations/{id}/confirm", ConfirmReservation)
+		r.Get("/reservations", GetAllReservations)
+		r.Post("/reservations", CreateReservation)
+		r.Get("/reservations/{id}", RetrieveReservation)
+		r.Patch("/reservations/{id}", UpdateReservation)
+		r.Patch("/reservations/{id}/confirm", ConfirmReservation)
+		r.Delete("/reservations/{id}/cancel", CancelReservation)
 
 
 
 		// invoices
-		// r.Get("/invoices", GetAllInvoices)
-		// r.Get("/invoices/{id}", RetrieveInvoice)
-		// r.Delete("/invoices/{id}", DeleteInvoice)
+		r.Get("/invoices", GetAllInvoices)
+		r.Post("/invoices", CreateInvoice)
+		r.Get("/invoices/{id}", RetrieveInvoice)
+		r.Patch("/invoices/{id}", UpdateInvoice)
+		
 		
 		
 		r.With(middleware.JWTAuthUser).Route("/p", func(r chi.Router) {

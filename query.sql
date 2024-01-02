@@ -112,6 +112,11 @@ insert into orderItem (order_id, dish_id, quantity) values (
 )
 returning *;
 
+-- name: UpdateOrderItem :exec
+update orderItem
+set quantity = $4
+where id = $1 and order_id = $2 and dish_id = $3;
+
 -- name: GetAllOrderItems :many
 select * from orderItem
 where order_id = $1;
@@ -182,11 +187,10 @@ returning *;
 
 -- name: UpdateInvoice :exec
 update invoice
-set invoice_date = $3,
-total_amount = $4,
-tax = $5,
-discount = $6,
-grand_total = $7
+set total_amount = $3,
+tax = $4,
+discount = $5,
+grand_total = $6
 where id = $1 and order_id = $2;
 
 -- name: DeleteInvoice :exec
@@ -194,8 +198,7 @@ delete from invoice
 where id = $1;
 
 -- name: GetAllReservations :many
-select * from reservation
-where restaurant_table = $1;
+select * from reservation;
 
 -- name: CreateReservation :one
 insert into reservation (table_id, reservation_date, reservation_time, status, created_at) values (
@@ -209,10 +212,10 @@ where id = $1;
 
 -- name: UpdateReservation :exec
 update reservation
-set reservation_date = $3,
-reservation_time = $4,
-status = $5
-where id = $1 and table_id = $2;
+set reservation_date = $2,
+reservation_time = $3,
+status = $4
+where id = $1;
 
 -- name: CancelReservation :exec
 delete from reservation

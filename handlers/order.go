@@ -32,33 +32,11 @@ func GetAllOrders(w http.ResponseWriter, r *http.Request) {
 	})	
 	
 }
+
 func CreateOrder(w http.ResponseWriter, r *http.Request) {
-	id := getField(r, "id")
-	menuID, err := uuid.Parse(id)
-	if err != nil {
-		l.Error(err.Error())
-		json.NewEncoder(w).Encode(resp{
-			"success": false,
-			"code": http.StatusBadRequest,
-			"msg": "Bad request",
-		})
-		return
-	}
-	id = getField(r, "dishID")
-	dishID, err := uuid.Parse(id)
-	if err != nil {
-		l.Error(err.Error())
-		json.NewEncoder(w).Encode(resp{
-			"success": false,
-			"code": http.StatusBadRequest,
-			"msg": "Bad request",
-		})
-		return
-	}
-
-	var payload types.OrderItemPayload
-
-	err = json.NewDecoder(r.Body).Decode(&payload)
+	var payload types.OrderPayload 
+	
+	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		l.Errorln(err)
 		json.NewEncoder(w).Encode(resp{
@@ -81,45 +59,13 @@ func CreateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	q := store.GetQuery()
-	data := models.RetrieveMenuDishParams{
-		MenuID: menuID,
-		ID: dishID,
-	}
-	dish, err := q.RetrieveMenuDish(ctx, data)
-	if err != nil {
-		l.Error(err.Error())
-		json.NewEncoder(w).Encode(resp{
-			"success": false,
-			"code": http.StatusInternalServerError,
-			"msg": "Internal server error",
-		})
-		return
-	}
-	
-	orderData := models.CreateOrderParams{
-		Status: models.OrderStatusPending,
+	order := models.CreateOrderParams {
+		Status: payload.Status,
 		CreatedAt: time.Now(),
-
-	}
-	order, err := q.CreateOrder(ctx, orderData)
-	if err != nil {
-		l.Error(err.Error())
-		json.NewEncoder(w).Encode(resp{
-			"success": false,
-			"code": http.StatusInternalServerError,
-			"msg": "Internal server error",
-		})
-		return
 	}
 
-	orderItemData := models.AddOrderItemsParams{
-		OrderID: order.ID,
-		DishID: dish.ID,
-		Quantity: payload.Quantity,
-	}
-
-	_, err = q.AddOrderItems(ctx, orderItemData)
-	if err != nil {
+	result, err := q.CreateOrder(ctx, order)
+		if err != nil {
 		l.Error(err.Error())
 		json.NewEncoder(w).Encode(resp{
 			"success": false,
@@ -132,10 +78,12 @@ func CreateOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp{
 		"success": true,
-		"order": order.ID,
+		"data": result.ID,
 	})
 
 }
+
+
 func RetrieveOrder(w http.ResponseWriter, r *http.Request) {
 	id := getField(r, "id")
 	orderID, err := uuid.Parse(id)
@@ -182,6 +130,16 @@ func UpdateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var payload types.OrderPayload
+	err = json.NewDecoder(r.Body).Decode(&payload)
+	if err != nil {
+		l.Errorln(err)
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusUnprocessableEntity,
+			"msg": "Unprocessable entity",
+		})
+		return
+	}
 	
 	v := types.NewValidator()
 
@@ -282,6 +240,82 @@ func GetAllOrderItems(w http.ResponseWriter,  r *http.Request) {
 		"data": result,
 	})		
 }
+
+
+func CreateOrUpdateOrderItem(w http.ResponseWriter,  r *http.Request) {
+	id := getField(r, "id")
+	orderID, err := uuid.Parse(id)
+	if err != nil {
+		l.Error(err.Error())
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusBadRequest,
+			"msg": "Bad request",
+		})
+		return
+	}
+
+	id = getField(r, "itemID")
+	orderItemID, err := uuid.Parse(id)
+	if err != nil {
+		l.Error(err.Error())
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusBadRequest,
+			"msg": "Bad request",
+		})
+		return
+	}
+
+	var payload types.OrderItemPayload
+	err = json.NewDecoder(r.Body).Decode(&payload)
+	if err != nil {
+		l.Errorln(err)
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusUnprocessableEntity,
+			"msg": "Unprocessable entity",
+		})
+		return
+	}
+	
+	v := types.NewValidator()
+
+	if err := v.Struct(payload); err != nil {
+		json.NewEncoder(w).Encode(resp{
+			"error": true,
+			"code": http.StatusBadRequest,
+			"msg": types.ValidatorErrors(err),
+		})
+		return
+	}
+
+	q := store.GetQuery()
+	orderItem := models.UpdateOrderItemParams{
+		ID: orderItemID,
+		OrderID: orderID,
+		Quantity: payload.Quantity,
+	}
+
+	err = q.UpdateOrderItem(ctx, orderItem)
+	if err != nil {
+		l.Error(err.Error())
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusInternalServerError,
+			"msg": "Internal server error",
+		})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	str := fmt.Sprintf("Successfully update orderItem with id %s", orderItemID)
+	json.NewEncoder(w).Encode(resp{
+		"success":true,
+		"msg": str,
+	})
+}
+
 
 func RemoveSpecificOrderItem(w http.ResponseWriter,  r *http.Request) {
 	id := getField(r, "id")

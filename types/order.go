@@ -1,6 +1,8 @@
 package types
 
-import "github.com/amosehiguese/restaurant-api/models"
+import (
+	"github.com/amosehiguese/restaurant-api/models"
+)
 
 type OrderItemPayload struct {
 	Quantity int32     `json:"quantity" validate:"required"`

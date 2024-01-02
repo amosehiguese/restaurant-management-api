@@ -60,6 +60,7 @@ func (ns NullOrderStatus) Value() (driver.Value, error) {
 type ReservationStatus string
 
 const (
+	ReservationStatusAvailable ReservationStatus = "available"
 	ReservationStatusConfirmed ReservationStatus = "confirmed"
 	ReservationStatusCanceled  ReservationStatus = "canceled"
 )
