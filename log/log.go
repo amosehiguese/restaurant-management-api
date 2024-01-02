@@ -23,17 +23,17 @@ var encodeCfg = zapcore.EncoderConfig{
 }
 
 
-type logger struct {
+type Logger struct {
 	Log *zap.Logger
 }
 
-func NewLog() *logger  {
+func NewLog() *Logger  {
 	file, err := os.OpenFile("log/restaurant.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalln("Failed to open log file", err)
 	}
 
-	l := logger{}
+	l := Logger{}
 	l.Log = zap.New(
 		zapcore.NewCore(
 			zapcore.NewConsoleEncoder(encodeCfg),
@@ -64,30 +64,31 @@ func NewLog() *logger  {
 	return &l
 }
 
-func (l *logger) Info(msg string) {
+func (l *Logger) Info(msg string) {
 	l.Log.Info(msg)
 }
-func (l *logger) Infof(msg string, args ...any) {
+func (l *Logger) Infof(msg string, args ...any) {
 	l.Log.Sugar().Infof(msg, args...)
 }
-func (l *logger) Infoln(msg ...any) {
+func (l *Logger) Infoln(msg ...any) {
 	l.Log.Sugar().Infoln(msg...)
 }
-func (l *logger) Error(msg string) {
+func (l *Logger) Error(msg string) {
 	l.Log.Error(msg)
 }
-func (l *logger) Errorf(msg string, args ...any) {
+func (l *Logger) Errorf(msg string, args ...any) {
 	l.Log.Sugar().Errorf(msg, args...)
 }
-func (l *logger) Errorln(msg ...any) {
+func (l *Logger) Errorln(msg ...any) {
 	l.Log.Sugar().Errorln(msg...)
 }
-func (l *logger) Debug(msg string) {
+func (l *Logger) Debug(msg string) {
 	l.Log.Debug(msg)
 }
-func (l *logger) Debugf(msg string, args ...any ) {
+func (l *Logger) Debugf(msg string, args ...any ) {
 	l.Log.Sugar().Debugf(msg, args...)
 }
-func (l *logger) Debugln(msg ...any) {
+func (l *Logger) Debugln(msg ...any) {
 	l.Log.Sugar().Debugln(msg...)
 }
+

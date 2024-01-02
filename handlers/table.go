@@ -11,9 +11,9 @@ import (
 	"github.com/google/uuid"
 )
 
-func GetMenu(w http.ResponseWriter, r *http.Request)  {
+func GetAllTables(w http.ResponseWriter, r *http.Request) {
 	q := store.GetQuery()
-	menus, err := q.GetAllMenu(ctx)
+	tables, err := q.GetAllTables(ctx)
 	if err != nil {
 		l.Error(err.Error())
 		json.NewEncoder(w).Encode(resp{
@@ -28,12 +28,12 @@ func GetMenu(w http.ResponseWriter, r *http.Request)  {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp{
 		"success": true,
-		"data": menus,
+		"data": tables,
 	})
 }
 
-func CreateMenu(w http.ResponseWriter, r *http.Request)  {
-	var payload types.MenuPayload
+func CreateTable(w http.ResponseWriter, r *http.Request) {
+	var payload types.RestaurantTable
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		l.Errorln(err)
@@ -58,11 +58,13 @@ func CreateMenu(w http.ResponseWriter, r *http.Request)  {
 
 	q := store.GetQuery()
 
-	menu := models.CreateMenuParams{
+	table := models.CreateTableParams{
 		Name: payload.Name,
-		Description: payload.Description,
+		Capacity: payload.Capacity,
+		Status: models.RestaurantTableStatusAvailable,
 	}
-	result, err := q.CreateMenu(ctx, menu)
+
+	result, err := q.CreateTable(ctx, table)
 	if err != nil {
 		l.Error(err.Error())
 		json.NewEncoder(w).Encode(resp{
@@ -78,13 +80,11 @@ func CreateMenu(w http.ResponseWriter, r *http.Request)  {
 		"success": true,
 		"data": result.ID,
 	})
-
-	
 }
 
-func RetrieveMenu(w http.ResponseWriter, r *http.Request) {
+func RetrieveTable(w http.ResponseWriter, r *http.Request) {
 	id := getField(r, "id")
-	menuID, err := uuid.Parse(id)
+	tableID, err := uuid.Parse(id)
 
 	if err != nil {
 		l.Error(err.Error())
@@ -96,12 +96,12 @@ func RetrieveMenu(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	q := store.GetQuery()
-	menu, err := q.RetrieveMenu(ctx, menuID)
+	table, err := q.RetrieveTable(ctx, tableID)
 	if err != nil {
 		json.NewEncoder(w).Encode(resp{
 			"success": false,
 			"code": http.StatusNotFound,
-			"msg": fmt.Sprintf("menu with this ID %s not found", menuID),
+			"msg": fmt.Sprintf("table with this ID %s not found", tableID),
 		})
 		return
 	}
@@ -109,13 +109,13 @@ func RetrieveMenu(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp{
 		"success": true,
-		"data": menu,
+		"data": table,
 	})
 }
 
-func UpdateMenu(w http.ResponseWriter, r *http.Request) {
+func UpdateTable(w http.ResponseWriter, r *http.Request) {
 	id := getField(r, "id")
-	menuID, err := uuid.Parse(id)
+	tableID, err := uuid.Parse(id)
 	if err != nil {
 		l.Error(err.Error())
 		json.NewEncoder(w).Encode(resp{
@@ -126,7 +126,7 @@ func UpdateMenu(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var payload types.MenuPayload
+	var payload types.RestaurantTable
 	err = json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		l.Errorln(err)
@@ -150,14 +150,15 @@ func UpdateMenu(w http.ResponseWriter, r *http.Request) {
 	}
 
 
-	menu := &models.UpdateMenuParams{
-		ID: menuID,
+	table := &models.UpdateTableParams{
+		ID: tableID,
 		Name: payload.Name,
-		Description: payload.Description,
+		Capacity: payload.Capacity,
+		Status: payload.Status,
 	}
 
 	q := store.GetQuery()
-	err = q.UpdateMenu(ctx, *menu)
+	err = q.UpdateTable(ctx, *table)
 	if err != nil {
 		l.Error(err.Error())
 		json.NewEncoder(w).Encode(resp{
@@ -169,17 +170,16 @@ func UpdateMenu(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	str := fmt.Sprintf("Successfully update menu with id %s", menuID)
+	str := fmt.Sprintf("Successfully update table with id %s", tableID)
 	json.NewEncoder(w).Encode(resp{
 		"success":true,
 		"msg": str,
 	})
-
 }
 
-func DeleteMenu(w http.ResponseWriter, r *http.Request) {
+func DeleteTable(w http.ResponseWriter, r *http.Request) {
 	id := getField(r, "id")
-	menuID, err := uuid.Parse(id)
+	tableID, err := uuid.Parse(id)
 	if err != nil {
 		l.Error(err.Error())
 		json.NewEncoder(w).Encode(resp{
@@ -191,7 +191,7 @@ func DeleteMenu(w http.ResponseWriter, r *http.Request) {
 	}
 	q := store.GetQuery()
 
-	err = q.DeleteMenu(ctx, menuID)
+	err = q.DeleteTable(ctx, tableID)
 	if err != nil {
 		l.Error(err.Error())
 		json.NewEncoder(w).Encode(resp{
@@ -202,7 +202,7 @@ func DeleteMenu(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dataResp := fmt.Sprintf("Menu with id %s is successfully deleted", id)
+	dataResp := fmt.Sprintf("Table with id %s is successfully deleted", id)
 	json.NewEncoder(w).Encode(resp{
 		"success": true,
 		"msg": dataResp,

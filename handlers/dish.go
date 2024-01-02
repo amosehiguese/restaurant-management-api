@@ -11,9 +11,22 @@ import (
 	"github.com/google/uuid"
 )
 
-func GetMenu(w http.ResponseWriter, r *http.Request)  {
+func GetAllMenuDishes(w http.ResponseWriter, r *http.Request)  {
+    id := getField(r, "id")
+	menuID, err := uuid.Parse(id)
+
+	if err != nil {
+		l.Error(err.Error())
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusBadRequest,
+			"msg": "Bad request",
+		})
+		return
+	}
+
 	q := store.GetQuery()
-	menus, err := q.GetAllMenu(ctx)
+	result, err := q.GetAllMenuDishes(ctx, menuID)
 	if err != nil {
 		l.Error(err.Error())
 		json.NewEncoder(w).Encode(resp{
@@ -24,17 +37,28 @@ func GetMenu(w http.ResponseWriter, r *http.Request)  {
 		return
 	}
 
-
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp{
 		"success": true,
-		"data": menus,
+		"data": result,
 	})
 }
+func CreateMenuDish(w http.ResponseWriter, r *http.Request)  {
+	id := getField(r, "id")
+	menuID, err := uuid.Parse(id)
 
-func CreateMenu(w http.ResponseWriter, r *http.Request)  {
-	var payload types.MenuPayload
-	err := json.NewDecoder(r.Body).Decode(&payload)
+	if err != nil {
+		l.Error(err.Error())
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusBadRequest,
+			"msg": "Bad request",
+		})
+		return
+	}
+
+	var payload types.DishPayload
+	err = json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		l.Errorln(err)
 		json.NewEncoder(w).Encode(resp{
@@ -57,12 +81,14 @@ func CreateMenu(w http.ResponseWriter, r *http.Request)  {
 	}
 
 	q := store.GetQuery()
-
-	menu := models.CreateMenuParams{
+	dish := models.CreateMenuDishParams{
 		Name: payload.Name,
 		Description: payload.Description,
+		Price: payload.Price,
+		MenuID: menuID,
 	}
-	result, err := q.CreateMenu(ctx, menu)
+
+	result, err := q.CreateMenuDish(ctx, dish)
 	if err != nil {
 		l.Error(err.Error())
 		json.NewEncoder(w).Encode(resp{
@@ -78,11 +104,8 @@ func CreateMenu(w http.ResponseWriter, r *http.Request)  {
 		"success": true,
 		"data": result.ID,
 	})
-
-	
 }
-
-func RetrieveMenu(w http.ResponseWriter, r *http.Request) {
+func RetrieveMenuDish(w http.ResponseWriter, r *http.Request)  {
 	id := getField(r, "id")
 	menuID, err := uuid.Parse(id)
 
@@ -95,13 +118,34 @@ func RetrieveMenu(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	q := store.GetQuery()
-	menu, err := q.RetrieveMenu(ctx, menuID)
+
+	dishId := getField(r, "dishID")
+	dishID, err := uuid.Parse(dishId)
+
 	if err != nil {
+		l.Error(err.Error())
 		json.NewEncoder(w).Encode(resp{
 			"success": false,
-			"code": http.StatusNotFound,
-			"msg": fmt.Sprintf("menu with this ID %s not found", menuID),
+			"code": http.StatusBadRequest,
+			"msg": "Bad request",
+		})
+		return
+	}
+
+	
+	q := store.GetQuery()
+
+	dataIDs := models.RetrieveMenuDishParams{
+		MenuID: menuID,
+		ID: dishID,
+	}
+	result, err := q.RetrieveMenuDish(ctx, dataIDs)
+	if err != nil {
+		l.Error(err.Error())
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusInternalServerError,
+			"msg": "Internal server error",
 		})
 		return
 	}
@@ -109,13 +153,13 @@ func RetrieveMenu(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp{
 		"success": true,
-		"data": menu,
+		"data": result,
 	})
 }
-
-func UpdateMenu(w http.ResponseWriter, r *http.Request) {
+func UpdateMenuDish(w http.ResponseWriter, r *http.Request)  {
 	id := getField(r, "id")
 	menuID, err := uuid.Parse(id)
+
 	if err != nil {
 		l.Error(err.Error())
 		json.NewEncoder(w).Encode(resp{
@@ -126,7 +170,20 @@ func UpdateMenu(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var payload types.MenuPayload
+	dishId := getField(r, "dishID")
+	dishID, err := uuid.Parse(dishId)
+
+	if err != nil {
+		l.Error(err.Error())
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusBadRequest,
+			"msg": "Bad request",
+		})
+		return
+	}
+
+	var payload types.DishPayload
 	err = json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		l.Errorln(err)
@@ -149,15 +206,16 @@ func UpdateMenu(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
-	menu := &models.UpdateMenuParams{
-		ID: menuID,
+	q := store.GetQuery()
+	dish := models.UpdateMenuDishParams{
 		Name: payload.Name,
 		Description: payload.Description,
+		Price: payload.Price,
+		MenuID: menuID,
+		ID: dishID,
 	}
 
-	q := store.GetQuery()
-	err = q.UpdateMenu(ctx, *menu)
+	err = q.UpdateMenuDish(ctx, dish)
 	if err != nil {
 		l.Error(err.Error())
 		json.NewEncoder(w).Encode(resp{
@@ -169,17 +227,16 @@ func UpdateMenu(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	str := fmt.Sprintf("Successfully update menu with id %s", menuID)
+	str := fmt.Sprintf("Successfully update dish with id %s", dishID)
 	json.NewEncoder(w).Encode(resp{
 		"success":true,
 		"msg": str,
 	})
-
 }
-
-func DeleteMenu(w http.ResponseWriter, r *http.Request) {
+func DeleteMenuDish(w http.ResponseWriter, r *http.Request)  {
 	id := getField(r, "id")
 	menuID, err := uuid.Parse(id)
+
 	if err != nil {
 		l.Error(err.Error())
 		json.NewEncoder(w).Encode(resp{
@@ -189,9 +246,27 @@ func DeleteMenu(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
+	dishId := getField(r, "dishID")
+	dishID, err := uuid.Parse(dishId)
+
+	if err != nil {
+		l.Error(err.Error())
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusBadRequest,
+			"msg": "Bad request",
+		})
+		return
+	}
+
 	q := store.GetQuery()
 
-	err = q.DeleteMenu(ctx, menuID)
+	menuDish := models.DeleteMenuDishParams{
+		MenuID: menuID,
+		ID: dishID,
+	}
+	err = q.DeleteMenuDish(ctx, menuDish)
 	if err != nil {
 		l.Error(err.Error())
 		json.NewEncoder(w).Encode(resp{
@@ -202,7 +277,7 @@ func DeleteMenu(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dataResp := fmt.Sprintf("Menu with id %s is successfully deleted", id)
+	dataResp := fmt.Sprintf("Dish with id %s is successfully deleted", dishID)
 	json.NewEncoder(w).Encode(resp{
 		"success": true,
 		"msg": dataResp,

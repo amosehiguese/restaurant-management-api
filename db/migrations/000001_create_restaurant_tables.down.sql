@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS roles;
 DROP TABLE IF EXISTS invoice;
 DROP TABLE IF EXISTS reservation;
 DROP TABLE IF EXISTS restaurant_table;

@@ -1,46 +1,44 @@
 package store
 
 import (
-	"context"
+	"database/sql"
+	"fmt"
+	"log"
 	"os"
-	"strconv"
-	"time"
-
-	"github.com/amosehiguese/restaurant-api/log"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
 
-var l = log.NewLog()
 
-func postgresConn() (*sqlx.DB, error) {
-	postgresURI := os.Getenv("POSTGRES_URI")
-	dbMaxConn, _ := strconv.Atoi(os.Getenv("DB_MAX_CONNECTIONS"))
-	dbMaxIdleConn, _ := strconv.Atoi(os.Getenv("DB_MAX_IDLE_CONNECTIONS"))
-	dbMaxLifeConn, _ := strconv.Atoi(os.Getenv("DB_MAX_LIFETIME_CONNECTIONS"))
 
-	dbX, errX := sqlx.ConnectContext(context.Background(), "postgres", postgresURI)
-	if errX != nil {
+func postgresConn() (*sql.DB, error) {
+	host := os.Getenv("DB_HOST")
+	username := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASSWORD")
+	dbname := os.Getenv("DB_NAME")
+	port := os.Getenv("DB_PORT")
+
+
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",host, username, password, dbname, port)
+
+
+
+	dbX, errX := sql.Open("postgres", dsn)
+	if err != nil {
 		return nil, errX
 	}
 
-	dbX.SetConnMaxLifetime(time.Duration(dbMaxLifeConn))
-	dbX.SetMaxIdleConns(dbMaxIdleConn)
-	dbX.SetMaxOpenConns(dbMaxConn)
-
-	if errX = dbX.Ping(); errX != nil {
+	if err := dbX.Ping(); err != nil {
 		defer dbX.Close()
-		return nil, errX
+		return nil, err
 	}
 
-	l.Infoln("successfully connected to postgres database")
+	log.Println("successfully connected to postgres database")
 
 	return dbX, nil
-
 }
 
 func postgresMigration() error {
@@ -49,17 +47,17 @@ func postgresMigration() error {
 
 	m, err := migrate.New(migSourceURL, postgresURI)
 	if err != nil {
-		l.Infoln("failed to generate migration instance ->", err)
+		log.Println("failed to generate migration instance ->", err)
 		return err
 	}
 
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		l.Infoln("Migration up failed ->", err)
+		log.Println("Migration up failed ->", err)
 		return err
 	} else if (err == migrate.ErrNoChange) {
-		l.Infoln("DB is up-to-date. No migrations done ->", err)
-	} else {
-		l.Infoln("Migration successful")
+		log.Println("DB is up-to-date. No migrations done ->",err)
+	} else{
+		log.Println("Migration successful")
 	}
 
 	return nil

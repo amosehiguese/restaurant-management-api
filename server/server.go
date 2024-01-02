@@ -12,6 +12,7 @@ import (
 	"github.com/amosehiguese/restaurant-api/log"
 	"github.com/amosehiguese/restaurant-api/store"
 	_ "github.com/amosehiguese/restaurant-api/store"
+	"github.com/go-chi/chi/v5"
 	_ "github.com/joho/godotenv/autoload"
 )
 
@@ -25,15 +26,18 @@ var (
 
 func Run() error {
 	flag.Parse()
+	r :=  chi.NewRouter()
 
 	l := log.NewLog()
 
 	srv := &http.Server{
 		Addr: *socketAddr,
-		Handler: http.HandlerFunc(handlers.Serve),
+		Handler: r,
 		IdleTimeout: 5 * time.Minute,
 		ReadHeaderTimeout: time.Minute,
 	}
+
+	handlers.ServeRoutes(r)
 	
 	done := make(chan struct{})
 
@@ -53,6 +57,7 @@ func Run() error {
 	}()
 
 	l.Infof("Serving request over %s\n", srv.Addr)
+	
 	store.SetUpDB()
 	
 	var err error 

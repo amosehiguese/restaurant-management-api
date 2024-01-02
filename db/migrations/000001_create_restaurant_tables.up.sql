@@ -3,13 +3,13 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS menu(
     id              UUID DEFAULT uuid_generate_v4 () PRIMARY KEY,
     name            VARCHAR (200) NOT NULL,
-    description     TEXT
+    description     TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS dish(
     id              UUID DEFAULT uuid_generate_v4 () PRIMARY KEY,
     name            VARCHAR (200) NOT NULL,
-    description     TEXT,
+    description     TEXT NOT NULL DEFAULT '',
     price           DECIMAL (20, 2) NOT NULL,
     menu_id         UUID NOT NULL REFERENCES menu (id) ON DELETE CASCADE
 );
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS restaurant_table(
 
 );
 
-CREATE TYPE reservation_status AS ENUM ('confirmed', 'canceled');
+CREATE TYPE reservation_status AS ENUM ('available', 'confirmed', 'canceled');
 
 CREATE TABLE IF NOT EXISTS reservation(
     id                     UUID DEFAULT uuid_generate_v4 () PRIMARY KEY,
@@ -64,15 +64,26 @@ CREATE TABLE IF NOT EXISTS invoice(
     grand_total        DECIMAL (20, 2) NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS roles(
+    id              SERIAL PRIMARY KEY,
+    name            VARCHAR(50) NOT NULL UNIQUE,
+    description     TEXT NOT NULL DEFAULT ''
+);
+
+
 CREATE TABLE IF NOT EXISTS users(
     id                 UUID DEFAULT uuid_generate_v4 () PRIMARY KEY,
     first_name         VARCHAR(50) NOT NULL,
     last_name          VARCHAR(50) NOT NULL ,
+    username           VARCHAR(255) NOT NULL UNIQUE,
     email              VARCHAR(255) NOT NULL UNIQUE,
     password_hash      VARCHAR(255) NOT NULL,
+    user_role          INT NOT NULL REFERENCES roles (id) ON DELETE CASCADE, 
     created_at         TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at         TIMESTAMP NULL   
 );
+
+
 
 
 CREATE OR REPLACE FUNCTION update_updated_at()

@@ -1,70 +1,66 @@
 package middleware
 
 import (
-	"context"
-	"crypto/rand"
-	"encoding/base64"
-	"fmt"
+	"encoding/json"
 	"net/http"
-	"os"
-	"strings"
-	"sync/atomic"
+
+	"github.com/amosehiguese/restaurant-api/auth"
 )
 
-type ctxKeyReqID int
+type resp map[string]any
 
-const RequestIDKey ctxKeyReqID = iota
+func JWTAuth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		err := auth.ValidateJWT(r)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(resp{
+				"success": false,
+				"msg": "Authentication required",
+				"code": http.StatusUnauthorized,
+			})
+			return 
+		}
 
-var (
-	prefix string
-	reqid uint64
-)
+		err = auth.ValidateAdminRoleJWT(r)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(resp{
+				"success": false,
+				"msg": "Authorization failed. Admin-only route",
+				"code": http.StatusUnauthorized,
+			})
+			return 
+		}
 
-func init() {
-	hostname, err := os.Hostname()
-	if hostname == "" || err != nil {
-		hostname = "localhost"
-	}
-
-	var buf [12]byte
-	var b64 string
-
-	for len(b64) < 10 {
-		rand.Read(buf[:])
-		b64 = base64.StdEncoding.EncodeToString(buf[:])
-		b64 = strings.NewReplacer("+", "", "/", "").Replace(b64)
-	}
-
-	prefix = fmt.Sprintf("%s/%s", hostname, b64[0:10])
+		next.ServeHTTP(w, r)
+	})
 }
 
-func RequestID(next http.Handler) http.Handler {
-	return http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-			reqID := r.Header.Get("X-Request-Id")
-			if reqID == "" {
-				myid := atomic.AddUint64(&reqid, 1)
-				reqID = fmt.Sprintf("%s-%06d", prefix, myid)
-			}
-			ctx = context.WithValue(ctx, RequestIDKey, reqID)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		},
-	)
-}
+func JWTAuthUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		err := auth.ValidateJWT(r)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(resp{
+				"success": false,
+				"msg": "Authentication required",
+				"code": http.StatusUnauthorized,
+			})
+			return 
+		}
 
-func Recoverer(next http.Handler) http.Handler {
-	return http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			defer func() {
-				if err := recover(); err != nil {
-					if err == http.ErrAbortHandler {
-						panic(err)
-					}
-				}
-			}()
-			
-			next.ServeHTTP(w,r)
-		},
-	)
+		err = auth.ValidateUserRoleJWT(r)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(resp{
+				"success": false,
+				"msg": "Authorization failed. Only registered users are allowed to perform this action",
+				"code": http.StatusUnauthorized,
+			})
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
