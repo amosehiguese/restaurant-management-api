@@ -11,7 +11,6 @@ import (
 	"github.com/amosehiguese/restaurant-api/handlers"
 	"github.com/amosehiguese/restaurant-api/log"
 	"github.com/amosehiguese/restaurant-api/store"
-	_ "github.com/amosehiguese/restaurant-api/store"
 	"github.com/go-chi/chi/v5"
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -58,7 +57,14 @@ func Run() error {
 
 	l.Infof("Serving request over %s\n", srv.Addr)
 	
-	store.SetUpDB()
+	// db config
+	dbhost := os.Getenv("DB_HOST")
+	dbuser := os.Getenv("DB_USER")
+	dbpwd := os.Getenv("DB_PASSWORD")
+	dbname := os.Getenv("DB_NAME")
+	dbport := os.Getenv("DB_PORT")
+	
+	store.SetUpDB(dbuser, dbpwd, dbhost, dbport, dbname)
 	
 	var err error 
 

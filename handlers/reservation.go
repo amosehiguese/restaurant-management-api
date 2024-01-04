@@ -14,8 +14,19 @@ import (
 
 
 func GetAllReservations(w http.ResponseWriter, r *http.Request) {
+	s, e, err := paginate(w, r)
+	if err != nil {
+		l.Error(err.Error())
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusBadRequest,
+			"msg": "Bad request",
+		})
+		return 
+	}
+		
 	q := store.GetQuery()
-	reservations, err := q.GetAllReservations(ctx)
+	result, err := q.GetAllReservations(ctx)
 	if err != nil {
 		l.Error(err.Error())
 		json.NewEncoder(w).Encode(resp{
@@ -26,11 +37,20 @@ func GetAllReservations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if *e < len(result) && len(result[*s:*e]) == pageSize {
+		result = result[*s:*e]
+	} else if *e >= len(result) && *s < len(result) {
+		result = result[*s:]
+	} else {
+		*s = 0
+		*e = pageSize
+		result = result[*s:*e]
+	}	
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp{
 		"success": true,
-		"data": reservations,
+		"data": result,
 	})
 }
 

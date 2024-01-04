@@ -7,7 +7,7 @@ import (
 )
 
 func ServeRoutes(r *chi.Mux) {
-	routes(r)
+	Routes(r)
 }
 
 func getField(r *http.Request, name string) string {

@@ -13,6 +13,17 @@ import (
 )
 
 func GetAllInvoices(w http.ResponseWriter, r *http.Request){
+	s, e, err := paginate(w, r)
+	if err != nil {
+		l.Error(err.Error())
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusBadRequest,
+			"msg": "Bad request",
+		})
+		return 
+	}
+
 	q := store.GetQuery()
 	invoices, err := q.GetAllInvoices(ctx)
 	if err != nil {
@@ -25,11 +36,10 @@ func GetAllInvoices(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp{
 		"success": true,
-		"data": invoices,
+		"data": invoices[*s:*e],
 	})
 }
 

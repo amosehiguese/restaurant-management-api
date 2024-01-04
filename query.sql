@@ -83,7 +83,7 @@ where id = $1;
 -- name: GetAllMenuDishes :many
 select * from dish
 where menu_id = $1
-order by price;
+order by id;
 
 -- name: CreateMenuDish :one
 insert into dish (name, description, price, menu_id) values (
@@ -107,23 +107,23 @@ delete from dish
 where menu_id = $1 and id = $2;
 
 -- name: AddOrderItems :one
-insert into orderItem (order_id, dish_id, quantity) values (
+insert into orderitem (order_id, dish_id, quantity) values (
     $1, $2, $3
 )
 returning *;
 
 -- name: UpdateOrderItem :exec
-update orderItem
-set quantity = $4
-where id = $1 and order_id = $2 and dish_id = $3;
+update orderitem
+set quantity = $3
+where id = $1 and dish_id = $2;
 
 -- name: GetAllOrderItems :many
-select * from orderItem
+select * from orderitem
 where order_id = $1;
 
 
 -- name: RemoveSpecificOrderItem :exec
-delete from orderItem
+delete from orderitem
 where id = $1 and order_id = $2;
 
 -- name: GetAllOrders :many
@@ -141,7 +141,8 @@ where id = $1;
 
 -- name: UpdateOrder :exec
 update orders
-set status = $2
+set updated_at = $3,
+status = $2
 where id = $1;
 
 -- name: DeleteOrder :exec

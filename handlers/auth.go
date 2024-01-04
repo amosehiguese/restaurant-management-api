@@ -169,4 +169,169 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func SignOut(w http.ResponseWriter, r *http.Request) {}
+func SignOut(w http.ResponseWriter, r *http.Request) {
+	claims, err := auth.ExtractTokenMetadata(r)
+	if err != nil {
+		l.Error(err.Error())
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusInternalServerError,
+			"msg": "Internal Server Error",
+		})
+		return
+	}
+	
+	userID := claims.UserID.String()
+
+	connRedis, err := store.RedisConn()
+	if err != nil {
+		l.Error(err.Error())
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusInternalServerError,
+			"msg": "Internal Server Error",
+		})
+		return
+	}
+	
+	errDelFromRedis := connRedis.Del(ctx, userID).Err()
+	if errDelFromRedis != nil {
+		l.Error(err.Error())
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusInternalServerError,
+			"msg": errDelFromRedis.Error(),
+		})
+		return
+	}
+
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp{
+		"success": true,
+		"code": http.StatusNoContent,
+	})
+}
+
+func RenewTokens(w http.ResponseWriter, r *http.Request) {
+	now := time.Now().Unix()
+
+	claims, err := auth.ExtractTokenMetadata(r)
+	if err != nil {
+		l.Error(err.Error())
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusInternalServerError,
+			"msg": "Internal Server Error",
+		})
+		return
+	}
+
+	expiresAccessToken := claims.EAT
+	if now > expiresAccessToken {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusUnauthorized,
+			"msg": "Unauthorized, check expiration time of your token",
+		})
+		return
+	}
+
+	var renew types.Renew
+	err = json.NewDecoder(r.Body).Decode(&renew)
+	if err != nil {
+		l.Errorln(err)
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusUnprocessableEntity,
+			"msg": "Unprocessable entity",
+		})
+		return
+	}
+
+	expiresRefreshToken, err := auth.ParseRefreshToken(renew.RefreshToken)
+	if err != nil {
+		l.Errorln(err)
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusBadRequest,
+			"msg": "Bad request",
+		})
+		return
+	}
+
+	if now < expiresRefreshToken {
+		userID := claims.UserID
+
+		q := store.GetQuery()
+		user, err := q.RetrieveUser(ctx, userID)
+		if err != nil {
+			l.Errorln(err)
+			json.NewEncoder(w).Encode(resp{
+				"success": false,
+				"code": http.StatusNotFound,
+				"msg": fmt.Sprintf("User with the given ID %v is not found", userID),
+			})
+			return
+		}
+
+		tokens, err := auth.GenNewTokens(userID, user.UserRole)
+		if err != nil {
+			l.Error(err.Error())
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(resp{
+				"success": false,
+				"code": http.StatusInternalServerError,
+				"msg": "Internal Server Error",
+			})
+			return
+		}	
+		
+		connRedis, err := store.RedisConn()
+		if err != nil {
+			l.Error(err.Error())
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(resp{
+				"success": false,
+				"code": http.StatusInternalServerError,
+				"msg": "Internal Server Error",
+			})
+			return
+		}
+
+		errRedis := connRedis.Set(ctx, userID.String(), tokens.Refresh, 0).Err()
+		if errRedis != nil {
+			l.Error(err.Error())
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(resp{
+				"success": false,
+				"code": http.StatusInternalServerError,
+				"msg": "Internal Server Error",
+			})
+			return
+		}
+		
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp{
+			"success": true, 
+			"tokens": resp{
+				"access": tokens.Access,
+				"refresh": tokens.Refresh,
+			},
+		})
+	} else {	
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusUnauthorized,
+			"msg": "unauthorized, your session was ended earlier",
+		})
+	}
+
+
+}

@@ -1,4 +1,6 @@
 MIGRATIONS_FOLDER = $(PWD)/db/migrations
+VERSION ?= $(shell git describe --match 'v[0-9]*' --tags --always)
+
 
 .PHONY: test
 test:
@@ -6,7 +8,7 @@ test:
 
 .PHONY: build
 build: 
-	go build -o bin/restuarant
+	@go build -ldflags "-X main.version=$(VERSION)" -o bin/restuarant
 
 .PHONY:start
 start: build

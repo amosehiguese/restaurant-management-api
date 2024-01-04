@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -14,19 +13,9 @@ import (
 
 
 
-func postgresConn() (*sql.DB, error) {
-	host := os.Getenv("DB_HOST")
-	username := os.Getenv("DB_USER")
-	password := os.Getenv("DB_PASSWORD")
-	dbname := os.Getenv("DB_NAME")
-	port := os.Getenv("DB_PORT")
-
-
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",host, username, password, dbname, port)
-
-
-
-	dbX, errX := sql.Open("postgres", dsn)
+func postgresConn(dbuser, dbpwd, dbhost, dbport, dbname string) (*sql.DB, error) {
+	dbConn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",dbhost, dbuser, dbpwd, dbname, dbport)
+	dbX, errX := sql.Open("postgres", dbConn)
 	if err != nil {
 		return nil, errX
 	}
@@ -41,11 +30,12 @@ func postgresConn() (*sql.DB, error) {
 	return dbX, nil
 }
 
-func postgresMigration() error {
-	postgresURI := os.Getenv("POSTGRES_URI")
+func postgresMigration(dbuser, dbpwd, dbhost, dbport, dbname string) error {
+	// := os.Getenv("POSTGRES_URI")
+	postgresURI := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=disable",dbuser, dbpwd, dbhost, dbport, dbname )
 	migSourceURL := "file://db/migrations"
 
-	m, err := migrate.New(migSourceURL, postgresURI)
+	m, err := migrate.New(migSourceURL,postgresURI)
 	if err != nil {
 		log.Println("failed to generate migration instance ->", err)
 		return err

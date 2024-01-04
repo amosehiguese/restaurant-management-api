@@ -7,13 +7,14 @@ package models
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
 )
 
 const addOrderItems = `-- name: AddOrderItems :one
-insert into orderItem (order_id, dish_id, quantity) values (
+insert into orderitem (order_id, dish_id, quantity) values (
     $1, $2, $3
 )
 returning id, order_id, dish_id, quantity
@@ -480,7 +481,7 @@ func (q *Queries) GetAllMenu(ctx context.Context) ([]Menu, error) {
 const getAllMenuDishes = `-- name: GetAllMenuDishes :many
 select id, name, description, price, menu_id from dish
 where menu_id = $1
-order by price
+order by id
 `
 
 func (q *Queries) GetAllMenuDishes(ctx context.Context, menuID uuid.UUID) ([]Dish, error) {
@@ -513,7 +514,7 @@ func (q *Queries) GetAllMenuDishes(ctx context.Context, menuID uuid.UUID) ([]Dis
 }
 
 const getAllOrderItems = `-- name: GetAllOrderItems :many
-select id, order_id, dish_id, quantity from orderItem
+select id, order_id, dish_id, quantity from orderitem
 where order_id = $1
 `
 
@@ -709,7 +710,7 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 }
 
 const removeSpecificOrderItem = `-- name: RemoveSpecificOrderItem :exec
-delete from orderItem
+delete from orderitem
 where id = $1 and order_id = $2
 `
 
@@ -965,40 +966,36 @@ func (q *Queries) UpdateMenuDish(ctx context.Context, arg UpdateMenuDishParams) 
 
 const updateOrder = `-- name: UpdateOrder :exec
 update orders
-set status = $2
+set updated_at = $3,
+status = $2
 where id = $1
 `
 
 type UpdateOrderParams struct {
-	ID     uuid.UUID   `json:"id"`
-	Status OrderStatus `json:"status"`
+	ID        uuid.UUID    `json:"id"`
+	Status    OrderStatus  `json:"status"`
+	UpdatedAt sql.NullTime `json:"updated_at"`
 }
 
 func (q *Queries) UpdateOrder(ctx context.Context, arg UpdateOrderParams) error {
-	_, err := q.db.ExecContext(ctx, updateOrder, arg.ID, arg.Status)
+	_, err := q.db.ExecContext(ctx, updateOrder, arg.ID, arg.Status, arg.UpdatedAt)
 	return err
 }
 
 const updateOrderItem = `-- name: UpdateOrderItem :exec
-update orderItem
-set quantity = $4
-where id = $1 and order_id = $2 and dish_id = $3
+update orderitem
+set quantity = $3
+where id = $1 and dish_id = $2
 `
 
 type UpdateOrderItemParams struct {
 	ID       uuid.UUID `json:"id"`
-	OrderID  uuid.UUID `json:"order_id"`
 	DishID   uuid.UUID `json:"dish_id"`
 	Quantity int32     `json:"quantity"`
 }
 
 func (q *Queries) UpdateOrderItem(ctx context.Context, arg UpdateOrderItemParams) error {
-	_, err := q.db.ExecContext(ctx, updateOrderItem,
-		arg.ID,
-		arg.OrderID,
-		arg.DishID,
-		arg.Quantity,
-	)
+	_, err := q.db.ExecContext(ctx, updateOrderItem, arg.ID, arg.DishID, arg.Quantity)
 	return err
 }
 

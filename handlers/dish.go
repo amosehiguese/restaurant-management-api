@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -14,7 +15,6 @@ import (
 func GetAllMenuDishes(w http.ResponseWriter, r *http.Request)  {
     id := getField(r, "id")
 	menuID, err := uuid.Parse(id)
-
 	if err != nil {
 		l.Error(err.Error())
 		json.NewEncoder(w).Encode(resp{
@@ -25,7 +25,19 @@ func GetAllMenuDishes(w http.ResponseWriter, r *http.Request)  {
 		return
 	}
 
+	s, e, err := paginate(w, r)
+	if err != nil {
+		l.Error(err.Error())
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusBadRequest,
+			"msg": "Bad request",
+		})
+		return 
+	}
+
 	q := store.GetQuery()
+
 	result, err := q.GetAllMenuDishes(ctx, menuID)
 	if err != nil {
 		l.Error(err.Error())
@@ -35,6 +47,16 @@ func GetAllMenuDishes(w http.ResponseWriter, r *http.Request)  {
 			"msg": "Internal server error",
 		})
 		return
+	}
+
+	if *e < len(result) && len(result[*s:*e]) == pageSize {
+		result = result[*s:*e]
+	} else if *e >= len(result) && *s < len(result) {
+		result = result[*s:]
+	} else {
+		*s = 0
+		*e = pageSize
+		result = result[*s:*e]
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -106,10 +128,22 @@ func CreateMenuDish(w http.ResponseWriter, r *http.Request)  {
 	})
 }
 func RetrieveMenuDish(w http.ResponseWriter, r *http.Request)  {
-	id := getField(r, "id")
-	menuID, err := uuid.Parse(id)
+		id := getField(r, "id")
+		menuID, err := uuid.Parse(id)
 
-	if err != nil {
+		if err != nil {
+			l.Error(err.Error())
+			json.NewEncoder(w).Encode(resp{
+				"success": false,
+				"code": http.StatusBadRequest,
+				"msg": "Bad request",
+			})
+			return
+		}
+
+		dishId := getField(r, "dishID")
+		dishID, err := uuid.Parse(dishId)
+		if err != nil {
 		l.Error(err.Error())
 		json.NewEncoder(w).Encode(resp{
 			"success": false,
@@ -117,38 +151,24 @@ func RetrieveMenuDish(w http.ResponseWriter, r *http.Request)  {
 			"msg": "Bad request",
 		})
 		return
-	}
+		}
 
-	dishId := getField(r, "dishID")
-	dishID, err := uuid.Parse(dishId)
+		dataIDs := models.RetrieveMenuDishParams{
+			MenuID: menuID,
+			ID: dishID,
+		}
 
-	if err != nil {
-		l.Error(err.Error())
-		json.NewEncoder(w).Encode(resp{
-			"success": false,
-			"code": http.StatusBadRequest,
-			"msg": "Bad request",
-		})
-		return
-	}
-
-	
 	q := store.GetQuery()
-
-	dataIDs := models.RetrieveMenuDishParams{
-		MenuID: menuID,
-		ID: dishID,
-	}
-	result, err := q.RetrieveMenuDish(ctx, dataIDs)
-	if err != nil {
-		l.Error(err.Error())
-		json.NewEncoder(w).Encode(resp{
-			"success": false,
-			"code": http.StatusInternalServerError,
-			"msg": "Internal server error",
-		})
-		return
-	}
+	result, err := q.RetrieveMenuDish(context.Background(), dataIDs)
+		if err != nil {
+			l.Error(err.Error())
+			json.NewEncoder(w).Encode(resp{
+				"success": false,
+				"code": http.StatusNotFound,
+				"msg": "Dish not found",
+			})
+			return
+		}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp{
@@ -172,15 +192,14 @@ func UpdateMenuDish(w http.ResponseWriter, r *http.Request)  {
 
 	dishId := getField(r, "dishID")
 	dishID, err := uuid.Parse(dishId)
-
 	if err != nil {
-		l.Error(err.Error())
-		json.NewEncoder(w).Encode(resp{
-			"success": false,
-			"code": http.StatusBadRequest,
-			"msg": "Bad request",
-		})
-		return
+	l.Error(err.Error())
+	json.NewEncoder(w).Encode(resp{
+		"success": false,
+		"code": http.StatusBadRequest,
+		"msg": "Bad request",
+	})
+	return
 	}
 
 	var payload types.DishPayload
@@ -249,15 +268,14 @@ func DeleteMenuDish(w http.ResponseWriter, r *http.Request)  {
 
 	dishId := getField(r, "dishID")
 	dishID, err := uuid.Parse(dishId)
-
 	if err != nil {
-		l.Error(err.Error())
-		json.NewEncoder(w).Encode(resp{
-			"success": false,
-			"code": http.StatusBadRequest,
-			"msg": "Bad request",
-		})
-		return
+	l.Error(err.Error())
+	json.NewEncoder(w).Encode(resp{
+		"success": false,
+		"code": http.StatusBadRequest,
+		"msg": "Bad request",
+	})
+	return
 	}
 
 	q := store.GetQuery()

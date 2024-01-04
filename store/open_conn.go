@@ -12,9 +12,6 @@ import (
 	"github.com/amosehiguese/restaurant-api/models"
 )
 
-
-
-
 var (
 	db *sql.DB
 	err error
@@ -22,13 +19,25 @@ var (
 
 var l = log.NewLog()
 
-func SetUpDB() {
+// type Client struct {
+// 	*models.Queries
+// 	db *sql.DB
+// 	l log.Logger
+// }
+
+
+// func (c *Client) Ping() {
+// 	c.db.Ping()
+// }
+
+
+func SetUpDB(dbuser, dbpwd, dbhost, dbport, dbname string) {
 	ctx := context.Background()
-	db, err = postgresConn()
+	db, err = postgresConn(dbuser, dbpwd, dbhost, dbport, dbname)
 	if err != nil {
 		l.Infoln("unable to connect to db ->", err)
 	}
-	postgresMigration()
+	postgresMigration(dbuser, dbpwd, dbhost, dbport, dbname)
 
 	var roles = []models.CreateRoleParams{{Name: "admin", Description: "Administrator role"}, {Name: "user", Description: "Authenticated user role"}, {Name: "anonymous", Description: "Unauthenticated user role"}}
 
@@ -45,6 +54,6 @@ func SetUpDB() {
 	l.Infof("created user")
 }
 
-func GetQuery() *models.Queries {
+func GetQuery() Query {
 	return models.New(db)
 }

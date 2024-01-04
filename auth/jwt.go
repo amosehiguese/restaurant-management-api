@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 func ValidateJWT(r *http.Request) error {
@@ -73,4 +74,33 @@ func verifyToken(r *http.Request) (*jwt.Token, error) {
 
 func jwtKeyFunc(token *jwt.Token) (any, error) {
 	return []byte(os.Getenv("JWT_SECRET_KEY")), nil 
+}
+
+type TokenMetadata struct {
+	UserID			uuid.UUID
+	EAT				int64
+}
+
+func ExtractTokenMetadata(r *http.Request) (*TokenMetadata, error) {
+	token, err := verifyToken(r)
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		userID, err := uuid.Parse(claims["id"].(string))
+		if err != nil {
+			return nil, err
+		}
+
+		eat := int64(claims["eat"].(float64))
+
+		return &TokenMetadata{
+			UserID: userID,
+			EAT: eat ,
+		}, nil
+	}
+
+	return nil, err
+	
 }

@@ -7,10 +7,11 @@ import (
 
 
 
-func routes(r *chi.Mux) {
+func Routes(r *chi.Mux) {
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/auth/signup",SignUp)
 		r.Post("/auth/login",SignIn)
+		r.Post("/token/renew", RenewTokens)
 		r.Get("/menu", GetMenu)
 		
 
@@ -30,7 +31,7 @@ func routes(r *chi.Mux) {
 
 		// orderItems
 		r.Get("/orders/{id}/items", GetAllOrderItems)
-		r.Put("/orders/{id}/items/{itemID}", CreateOrUpdateOrderItem)
+		r.Put("/orders/{id}/items", CreateOrUpdateOrderItem)
 		r.Delete("/orders/{id}/items/{itemID}", RemoveSpecificOrderItem)
 		
 		// tables
