@@ -12,7 +12,15 @@ import (
 	"github.com/google/uuid"
 )
 
-
+// GetAllReservations returns all reservations
+// @Summary List all reservations
+// @Description Get all reservations stored in the database
+// @Tags Reservation
+// @Produce json
+// @Router /reservations [get]
+// @Success 200 {object} models.Reservation
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 500 {object} http.StatusInternalServerError
 func GetAllReservations(w http.ResponseWriter, r *http.Request) {
 	s, e, err := paginate(w, r)
 	if err != nil {
@@ -41,7 +49,7 @@ func GetAllReservations(w http.ResponseWriter, r *http.Request) {
 		result = result[*s:*e]
 	} else if *e >= len(result) && *s < len(result) {
 		result = result[*s:]
-	} else {
+	} else if *e >= len(result) && *s >= len(result) && result != nil {
 		*s = 0
 		*e = pageSize
 		result = result[*s:*e]
@@ -54,6 +62,16 @@ func GetAllReservations(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// CreateReservation writes a reservation to the database
+// @Summary Creates a reservation
+// @Description Creates a reservation in the database
+// @Tags Reservation
+// @Produce json
+// @Router /reservations [post]
+// @Success 200 {object} models.Reservation
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 422 {object} http.StatusUnprocessableEntity
+// @Failure 500 {object} http.StatusInternalServerError
 func CreateReservation(w http.ResponseWriter, r *http.Request) {
 
 	var payload types.ReservationPayload
@@ -83,8 +101,8 @@ func CreateReservation(w http.ResponseWriter, r *http.Request) {
 
 	reservation := models.CreateReservationParams{
 		TableID: payload.TableID,
-		ReservationDate: payload.ReservationDate,
-		ReservationTime: payload.ReservationTime,
+		ReservationDate: parseDate(payload.ReservationDate),
+		ReservationTime: parseTime(payload.ReservationTime),
 		Status: models.ReservationStatusAvailable,
 		CreatedAt: time.Now(),
 	}
@@ -106,6 +124,17 @@ func CreateReservation(w http.ResponseWriter, r *http.Request) {
 		"data": result.ID,
 	})
 }
+
+// RetrieveReservation renders the reservation with the given id 
+// @Summary Get reservation by id
+// @Description RetrieveReservation returns a single reservation by id
+// @Tags Reservation
+// @Produce json
+// @Param id path string true "reservation id"
+// @Router /reservations/{id} [get]
+// @Success 200 {object} models.Reservation
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 404 {object} http.StatusNotFound
 func RetrieveReservation(w http.ResponseWriter, r *http.Request) {
 	id := getField(r, "id")
 	reservationID, err := uuid.Parse(id)
@@ -139,6 +168,17 @@ func RetrieveReservation(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// UpdateReservations modifies the reservation with the given id 
+// @Summary Modify reservation by id
+// @Description UpdateReservation modifies a single reservation by id
+// @Tags Reservation
+// @Produce json
+// @Param id path string true "reservation id"
+// @Router /reservations/{id} [patch]
+// @Success 200 {object} models.Reservation
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 422 {object} http.StatusUnprocessableEntity
+// @Failure 500 {object} http.StatusInternalServerError
 func UpdateReservation(w http.ResponseWriter, r *http.Request) {
 	id := getField(r, "id")
 	reservationID, err := uuid.Parse(id)
@@ -179,8 +219,8 @@ func UpdateReservation(w http.ResponseWriter, r *http.Request) {
 
 	restaurant := models.UpdateReservationParams{
 		ID: reservationID,
-		ReservationDate: payload.ReservationDate,
-		ReservationTime: payload.ReservationTime,
+		ReservationDate: parseDate(payload.ReservationDate),
+		ReservationTime: parseTime(payload.ReservationTime),
 		Status: payload.Status,
 	}
 
@@ -204,46 +244,17 @@ func UpdateReservation(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func ConfirmReservation(w http.ResponseWriter, r *http.Request) {
-	id := getField(r, "id")
-	reservationID, err := uuid.Parse(id)
-
-	if err != nil {
-		l.Error(err.Error())
-		json.NewEncoder(w).Encode(resp{
-			"success": false,
-			"code": http.StatusBadRequest,
-			"msg": "Bad request",
-		})
-		return
-	}
-
-	restaurant := models.ConfirmReservationParams{
-		ID: reservationID,
-		Status: models.ReservationStatusConfirmed,
-	}
-
-	q := store.GetQuery()
-	err = q.ConfirmReservation(ctx, restaurant)
-	if err != nil {
-		l.Error(err.Error())
-		json.NewEncoder(w).Encode(resp{
-			"success": false,
-			"code": http.StatusInternalServerError,
-			"msg": "Internal server error",
-		})
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	str := fmt.Sprintf("Successfully update reservation with id %s", reservationID)
-	json.NewEncoder(w).Encode(resp{
-		"success":true,
-		"msg": str,
-	})
-}
-
-func CancelReservation(w http.ResponseWriter, r *http.Request) {
+// CancelReservation modifies the reservation with the given id 
+// @Summary Modify reservation by id
+// @Description CancelReservation modifies a single menu by id and sets its status to canceled
+// @Tags Reservation
+// @Produce json
+// @Param id path string true "reservation id"
+// @Router /reservations/{id} [patch]
+// @Success 200 {object} models.Reservation
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 500 {object} http.StatusInternalServerError
+func DeleteReservation(w http.ResponseWriter, r *http.Request) {
 	id := getField(r, "id")
 	reservationID, err := uuid.Parse(id)
 

@@ -12,6 +12,16 @@ import (
 	"github.com/google/uuid"
 )
 
+// GetAllMenuDishes returns all dishes associated with the given menu id in the database
+// @Summary List all dishes
+// @Description Get all dishes associated with the given menu id stored in the database
+// @Tags Dishes
+// @Produce json
+// @Param id path string true "menu id"
+// @Router /menu/{id}/dishes [get]
+// @Success 200 {object} models.Dish
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 500 {object} http.StatusInternalServerError
 func GetAllMenuDishes(w http.ResponseWriter, r *http.Request)  {
     id := getField(r, "id")
 	menuID, err := uuid.Parse(id)
@@ -53,7 +63,7 @@ func GetAllMenuDishes(w http.ResponseWriter, r *http.Request)  {
 		result = result[*s:*e]
 	} else if *e >= len(result) && *s < len(result) {
 		result = result[*s:]
-	} else {
+	} else if *e >= len(result) && *s >= len(result) && result != nil {
 		*s = 0
 		*e = pageSize
 		result = result[*s:*e]
@@ -65,6 +75,18 @@ func GetAllMenuDishes(w http.ResponseWriter, r *http.Request)  {
 		"data": result,
 	})
 }
+
+// CreateMenuDish writes a dish to the database
+// @Summary Creates a dish
+// @Description Creates a dish for a given menu
+// @Tags Dishes
+// @Produce json
+// @Param id path string true "menu id"
+// @Router /menu/{id}/dishes [post]
+// @Success 200 {object} models.Dish
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 422 {object} http.StatusUnprocessableEntity
+// @Failure 500 {object} http.StatusInternalServerError
 func CreateMenuDish(w http.ResponseWriter, r *http.Request)  {
 	id := getField(r, "id")
 	menuID, err := uuid.Parse(id)
@@ -127,6 +149,18 @@ func CreateMenuDish(w http.ResponseWriter, r *http.Request)  {
 		"data": result.ID,
 	})
 }
+
+// RetrieveMenuDish renders the dish with the given id 
+// @Summary Get dish by id
+// @Description RetrieveMenuDish returns a single dish by id
+// @Tags Dish
+// @Produce json
+// @Param id path string true "menu id"
+// @Param dishID path string true "dish id"
+// @Router /menu/{id}/dishes/{dishID} [get]
+// @Success 200 {object} models.Dish
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 404 {object} http.StatusNotFound
 func RetrieveMenuDish(w http.ResponseWriter, r *http.Request)  {
 		id := getField(r, "id")
 		menuID, err := uuid.Parse(id)
@@ -176,6 +210,19 @@ func RetrieveMenuDish(w http.ResponseWriter, r *http.Request)  {
 		"data": result,
 	})
 }
+
+// UpdateMenuDish modifies the dish with the given id 
+// @Summary Modify dish by id
+// @Description UpdateMenuDish modifies a single dish by id
+// @Tags Dish
+// @Produce json
+// @Param id path string true "menu id"
+// @Param dishID path string true "dish id"
+// @Router /menu/{id}/dishes/{dishID} [patch]
+// @Success 200 {object} models.Dish
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 422 {object} http.StatusUnprocessableEntity
+// @Failure 500 {object} http.StatusInternalServerError
 func UpdateMenuDish(w http.ResponseWriter, r *http.Request)  {
 	id := getField(r, "id")
 	menuID, err := uuid.Parse(id)
@@ -252,6 +299,18 @@ func UpdateMenuDish(w http.ResponseWriter, r *http.Request)  {
 		"msg": str,
 	})
 }
+
+// DeleteMenuDish remove the dish with the given id 
+// @Summary Removes dish by id
+// @Description Removes a single dish by id under a specific menu from the database
+// @Tags Dish
+// @Produce json
+// @Param id path string true "menu id"
+// @Param dishID path string true "dish id"
+// @Router /menu/{id}/dishes/{dishID} [delete]
+// @Success 200 {object} string
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 500 {object} http.StatusInternalServerError
 func DeleteMenuDish(w http.ResponseWriter, r *http.Request)  {
 	id := getField(r, "id")
 	menuID, err := uuid.Parse(id)

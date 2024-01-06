@@ -114,8 +114,8 @@ returning *;
 
 -- name: UpdateOrderItem :exec
 update orderitem
-set quantity = $3
-where id = $1 and dish_id = $2;
+set quantity = $2
+where id = $1;
 
 -- name: GetAllOrderItems :many
 select * from orderitem
@@ -153,7 +153,7 @@ where id = $1;
 select * from restaurant_table;
 
 -- name: CreateTable :one
-insert into restaurant_table (name, capacity, status) values (
+insert into restaurant_table (number, capacity, status) values (
     $1, $2, $3
 )
 returning *;
@@ -164,7 +164,7 @@ where id = $1;
 
 -- name: UpdateTable :exec
 update restaurant_table
-set name = $2,
+set number = $2,
 capacity = $3,
 status = $4
 where id = $1;
@@ -186,13 +186,15 @@ insert into invoice (order_id, invoice_date, total_amount, tax, discount, grand_
 )
 returning *;
 
--- name: UpdateInvoice :exec
+-- name: UpdateInvoice :one
 update invoice
-set total_amount = $3,
-tax = $4,
-discount = $5,
-grand_total = $6
-where id = $1 and order_id = $2;
+set total_amount = $2,
+tax = $3,
+discount = $4,
+grand_total = $5
+where id = $1
+
+returning *;
 
 -- name: DeleteInvoice :exec
 delete from invoice
@@ -225,8 +227,3 @@ where id = $1;
 -- name: CheckReservations :many
 select * from reservation
 where status iLike '%available%';
-
--- name: ConfirmReservation :exec
-update reservation
-set status = $2
-where id = $1;

@@ -12,7 +12,6 @@ type Query interface {
 	AddOrderItems(ctx context.Context, arg models.AddOrderItemsParams) (models.Orderitem, error)
 	CancelReservation(ctx context.Context, id uuid.UUID) error
 	CheckReservations(ctx context.Context) ([]models.Reservation, error)
-	ConfirmReservation(ctx context.Context, arg models.ConfirmReservationParams) error
 	CreateInvoice(ctx context.Context, arg models.CreateInvoiceParams) (models.Invoice, error)
 	CreateMenu(ctx context.Context, arg models.CreateMenuParams) (models.Menu, error)
 	CreateMenuDish(ctx context.Context, arg models.CreateMenuDishParams) (models.Dish, error)

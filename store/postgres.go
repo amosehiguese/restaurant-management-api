@@ -33,6 +33,8 @@ func postgresConn(dbuser, dbpwd, dbhost, dbport, dbname string) (*sql.DB, error)
 func postgresMigration(dbuser, dbpwd, dbhost, dbport, dbname string) error {
 	// := os.Getenv("POSTGRES_URI")
 	postgresURI := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=disable",dbuser, dbpwd, dbhost, dbport, dbname )
+	// POSTGRES_URI='postgres://postgres:password123@localhost:5432/restaurantdb?sslmode=disable'
+
 	migSourceURL := "file://db/migrations"
 
 	m, err := migrate.New(migSourceURL,postgresURI)

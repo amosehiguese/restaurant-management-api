@@ -11,6 +11,15 @@ import (
 	"github.com/google/uuid"
 )
 
+// GetAllTables returns all tables
+// @Summary List all tables
+// @Description Get all tables stored in the database
+// @Tags Table
+// @Produce json
+// @Router /tables [get]
+// @Success 200 {object} models.RestaurantTable
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 500 {object} http.StatusInternalServerError
 func GetAllTables(w http.ResponseWriter, r *http.Request) {
 	s, e, err := paginate(w, r)
 	if err != nil {
@@ -39,7 +48,7 @@ func GetAllTables(w http.ResponseWriter, r *http.Request) {
 		result = result[*s:*e]
 	} else if *e >= len(result) && *s < len(result) {
 		result = result[*s:]
-	} else {
+	} else if *e >= len(result) && *s >= len(result) && result != nil {
 		*s = 0
 		*e = pageSize
 		result = result[*s:*e]
@@ -52,6 +61,16 @@ func GetAllTables(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// CreateTable writes a table to the database
+// @Summary Creates a table
+// @Description Creates a table in the database
+// @Tags Table
+// @Produce json
+// @Router /tables [post]
+// @Success 200 {object} models.RestaurantTable
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 422 {object} http.StatusUnprocessableEntity
+// @Failure 500 {object} http.StatusInternalServerError
 func CreateTable(w http.ResponseWriter, r *http.Request) {
 	var payload types.RestaurantTable
 	err := json.NewDecoder(r.Body).Decode(&payload)
@@ -79,7 +98,7 @@ func CreateTable(w http.ResponseWriter, r *http.Request) {
 	q := store.GetQuery()
 
 	table := models.CreateTableParams{
-		Name: payload.Name,
+		Number: payload.Number,
 		Capacity: payload.Capacity,
 		Status: models.RestaurantTableStatusAvailable,
 	}
@@ -102,6 +121,16 @@ func CreateTable(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// RetrieveTable renders the table with the given id 
+// @Summary Get table by id
+// @Description RetrieveTable returns a single table by id
+// @Tags Table
+// @Produce json
+// @Param id path string true "table id"
+// @Router /tables/{id} [get]
+// @Success 200 {object} models.RestaurantTable
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 404 {object} http.StatusNotFound
 func RetrieveTable(w http.ResponseWriter, r *http.Request) {
 	id := getField(r, "id")
 	tableID, err := uuid.Parse(id)
@@ -133,6 +162,17 @@ func RetrieveTable(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// UpdateTable modifies the table with the given id 
+// @Summary Modify table by id
+// @Description UpdateTable modifies a single table by id
+// @Tags Table
+// @Produce json
+// @Param id path string true "table id"
+// @Router /tables/{id} [patch]
+// @Success 200 {object} models.RestaurantTable
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 422 {object} http.StatusUnprocessableEntity
+// @Failure 500 {object} http.StatusInternalServerError
 func UpdateTable(w http.ResponseWriter, r *http.Request) {
 	id := getField(r, "id")
 	tableID, err := uuid.Parse(id)
@@ -172,7 +212,7 @@ func UpdateTable(w http.ResponseWriter, r *http.Request) {
 
 	table := &models.UpdateTableParams{
 		ID: tableID,
-		Name: payload.Name,
+		Number: payload.Number,
 		Capacity: payload.Capacity,
 		Status: payload.Status,
 	}
@@ -197,6 +237,16 @@ func UpdateTable(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// DeleteTable removes the table with the given id 
+// @Summary Removes table by id
+// @Description Removes a single table by id from the database
+// @Tags Table
+// @Produce json
+// @Param id path string true "table id"
+// @Router /tables/{id} [delete]
+// @Success 200 {object} string
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 500 {object} http.StatusInternalServerError
 func DeleteTable(w http.ResponseWriter, r *http.Request) {
 	id := getField(r, "id")
 	tableID, err := uuid.Parse(id)

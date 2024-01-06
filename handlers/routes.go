@@ -1,83 +1,101 @@
 package handlers
 
 import (
+	"net/http"
+
 	"github.com/amosehiguese/restaurant-api/middleware"
 	"github.com/go-chi/chi/v5"
+	_ "github.com/swaggo/http-swagger/example/go-chi/docs"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 
 
 func Routes(r *chi.Mux) {
+	r.HandleFunc("/swagger", func(w http.ResponseWriter, r *http.Request) {
+    http.Redirect(w, r, r.RequestURI+"/", http.StatusMovedPermanently)
+	})
+
+	r.Get("/swagger*", httpSwagger.Handler())
+
 	r.Route("/api/v1", func(r chi.Router) {
+		// auth
 		r.Post("/auth/signup",SignUp)
 		r.Post("/auth/login",SignIn)
-		r.Post("/token/renew", RenewTokens)
+
+		// menu and dishes
 		r.Get("/menu", GetMenu)
-		
-
-        // dishes
+		r.Get("/menu/{id}", RetrieveMenu)
 		r.Get("/menu/{id}/dishes", GetAllMenuDishes)
-		r.Post("/menu/{id}/dishes", CreateMenuDish)
 		r.Get("/menu/{id}/dishes/{dishID}", RetrieveMenuDish)
-		r.Patch("/menu/{id}/dishes/{dishID}", UpdateMenuDish)
-		r.Delete("/menu/{id}/dishes/{dishID}", DeleteMenuDish)
 
-		// orders
-		r.Get("/orders", GetAllOrders)
-		r.Post("/orders", CreateOrder)
-		r.Get("/orders/{id}", RetrieveOrder)
-		r.Patch("/orders/{id}", UpdateOrder)
-		r.Delete("/orders/{id}", DeleteOrder)
-
-		// orderItems
-		r.Get("/orders/{id}/items", GetAllOrderItems)
-		r.Put("/orders/{id}/items", CreateOrUpdateOrderItem)
-		r.Delete("/orders/{id}/items/{itemID}", RemoveSpecificOrderItem)
-		
 		// tables
 		r.Get("/tables", GetAllTables)
-		r.Post("/tables", CreateTable)
 		r.Get("/tables/{id}", RetrieveTable)
-		r.Patch("/tables/{id}", UpdateTable)
-		r.Delete("/tables/{id}", DeleteTable)
-
-		// reservations
-		r.Get("/reservations", GetAllReservations)
-		r.Post("/reservations", CreateReservation)
-		r.Get("/reservations/{id}", RetrieveReservation)
-		r.Patch("/reservations/{id}", UpdateReservation)
-		r.Patch("/reservations/{id}/confirm", ConfirmReservation)
-		r.Delete("/reservations/{id}/cancel", CancelReservation)
-
-
-
-		// invoices
-		r.Get("/invoices", GetAllInvoices)
-		r.Post("/invoices", CreateInvoice)
-		r.Get("/invoices/{id}", RetrieveInvoice)
-		r.Patch("/invoices/{id}", UpdateInvoice)
-		
 		
 		
 		r.With(middleware.JWTAuthUser).Route("/p", func(r chi.Router) {
+			r.Post("/auth/signout",SignOut)
+			r.Post("/token/renew", RenewTokens)
+
+			// reservations
+			r.Get("/reservations", GetAllReservations)
+			r.Post("/reservations", CreateReservation)
+			r.Get("/reservations/{id}", RetrieveReservation)
+			r.Patch("/reservations/{id}", UpdateReservation)
+			r.Delete("/reservations/{id}", DeleteReservation)			
+
+
+			// invoices
+			r.Get("/invoices", GetAllInvoices)	
+			r.Post("/invoices", CreateInvoice)
+			r.Get("/invoices/{id}", RetrieveInvoice)	
 			
+			// orders
+			r.Get("/orders", GetAllOrders)
+			r.Post("/orders", CreateOrder)
+			r.Get("/orders/{id}", RetrieveOrder)
+			r.Patch("/orders/{id}", UpdateOrder)
+			r.Delete("/orders/{id}", DeleteOrder)
+			
+			// orderItems
+			r.Get("/orders/{id}/items", GetAllOrderItems)
+			r.Put("/orders/{id}/items", CreateOrderItem)
+			r.Put("/orders/{id}/items/{itemID}", UpdateOrderItem)
+			r.Delete("/orders/{id}/items/{itemID}", RemoveSpecificOrderItem)							
 		},)
 
 		r.With(middleware.JWTAuth).Route("/admin", func(r chi.Router) {
 		
-
+			// menu
 			r.Post("/menu", CreateMenu)
-			r.Get("/menu/{id}", RetrieveMenu)
 			r.Patch("/menu/{id}", UpdateMenu)
 			r.Delete("/menu/{id}", DeleteMenu)
+
+
+			// dishes
+			r.Post("/menu/{id}/dishes", CreateMenuDish)
+			r.Patch("/menu/{id}/dishes/{dishID}", UpdateMenuDish)
+			r.Delete("/menu/{id}/dishes/{dishID}", DeleteMenuDish)		
+			
+			// tables
+			r.Post("/tables", CreateTable)
+			r.Patch("/tables/{id}", UpdateTable)
+			r.Delete("/tables/{id}", DeleteTable)			
+
 			// user
 			r.Get("/users", GetUsers)
 			r.Get("/users/{id}", RetrieveUser)
 			r.Patch("/users/{id}", UpdateUser)
+
 			// roles
 			r.Get("/roles", GetRoles)
 			r.Post("/roles", CreateRole)
-			r.Patch("/role/{id}", UpdateRole)	
+			r.Patch("/roles/{id}", UpdateRole)	
+			r.Delete("/roles/{id}", DeleteRole)	
+
+			// invoices
+			r.Patch("/invoices/{id}", UpdateInvoice)			
 		},)
 	})
 }

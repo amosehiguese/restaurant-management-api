@@ -11,6 +11,15 @@ import (
 	"github.com/google/uuid"
 )
 
+// GetMenu returns all menu
+// @Summary List all menu
+// @Description Get all menu stored in the database
+// @Tags Menu
+// @Produce json
+// @Router /menu [get]
+// @Success 200 {object} models.Menu
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 500 {object} http.StatusInternalServerError
 func GetMenu(w http.ResponseWriter, r *http.Request)  {
 	s, e, err := paginate(w, r)
 	if err != nil {
@@ -35,11 +44,12 @@ func GetMenu(w http.ResponseWriter, r *http.Request)  {
 		return
 	}
 
+	
 	if *e < len(result) && len(result[*s:*e]) == pageSize {
 		result = result[*s:*e]
 	} else if *e >= len(result) && *s < len(result) {
 		result = result[*s:]
-	} else {
+	} else if *e >= len(result) && *s >= len(result) && result != nil {
 		*s = 0
 		*e = pageSize
 		result = result[*s:*e]
@@ -52,6 +62,16 @@ func GetMenu(w http.ResponseWriter, r *http.Request)  {
 	})
 }
 
+// CreateMenu writes a menu to the database
+// @Summary Creates a menu
+// @Description Creates a menu in the database
+// @Tags Menu
+// @Produce json
+// @Router /menu [post]
+// @Success 200 {object} models.Menu
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 422 {object} http.StatusUnprocessableEntity
+// @Failure 500 {object} http.StatusInternalServerError
 func CreateMenu(w http.ResponseWriter, r *http.Request)  {
 	var payload types.MenuPayload
 	err := json.NewDecoder(r.Body).Decode(&payload)
@@ -102,6 +122,16 @@ func CreateMenu(w http.ResponseWriter, r *http.Request)  {
 	
 }
 
+// RetrieveMenu renders the menu with the given id 
+// @Summary Get menu by id
+// @Description RetrieveMenu returns a single menu by id
+// @Tags Menu
+// @Produce json
+// @Param id path string true "menu id"
+// @Router /menu/{id} [get]
+// @Success 200 {object} models.Menu
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 404 {object} http.StatusNotFound
 func RetrieveMenu(w http.ResponseWriter, r *http.Request) {
 	id := getField(r, "id")
 	menuID, err := uuid.Parse(id)
@@ -133,6 +163,17 @@ func RetrieveMenu(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// UpdateMenu modifies the menu with the given id 
+// @Summary Modify menu by id
+// @Description UpdateMenu modifies a single menu by id
+// @Tags Menu
+// @Produce json
+// @Param id path string true "menu id"
+// @Router /menu/{id} [patch]
+// @Success 200 {object} models.Invoice
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 422 {object} http.StatusUnprocessableEntity
+// @Failure 500 {object} http.StatusInternalServerError
 func UpdateMenu(w http.ResponseWriter, r *http.Request) {
 	id := getField(r, "id")
 	menuID, err := uuid.Parse(id)
@@ -197,6 +238,16 @@ func UpdateMenu(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// DeleteMenu remove the menu with the given id 
+// @Summary Removes menu by id
+// @Description Removes a single menu by id from the database
+// @Tags Menu
+// @Produce json
+// @Param id path string true "menu id"
+// @Router /menu/{id} [delete]
+// @Success 200 {object} string
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 500 {object} http.StatusInternalServerError
 func DeleteMenu(w http.ResponseWriter, r *http.Request) {
 	id := getField(r, "id")
 	menuID, err := uuid.Parse(id)

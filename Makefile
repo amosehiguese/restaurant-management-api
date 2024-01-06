@@ -1,5 +1,10 @@
 MIGRATIONS_FOLDER = $(PWD)/db/migrations
+SWAG_PATH ?= $(go env GOPATH)
 VERSION ?= $(shell git describe --match 'v[0-9]*' --tags --always)
+DBUSER = $(DB_USER)
+DBPORT = $(DB_PORT)
+DBNAME = $(DB_NAME)
+DBPASSWORD = $(DB_PASSWORD)
 
 
 .PHONY: test
@@ -29,3 +34,23 @@ mig-down:
 .PHONY: mig-force
 mig-force:
 	migrate -database "$(DATABASE_URL)" -path $(MIGRATIONS_FOLDER) force 1
+
+docker.postgres:
+	docker run --rm -d \
+		--name postgresql \
+		-e POSTGRES_USER=$(DBUSER) \
+		-e POSTGRES_PASSWORD=$(DBPASSWORD) \
+		-e POSTGRES_DB=$(DBNAME) \
+		-p 5432:5432 \
+		bitnami/postgresql:latest
+
+docker.redis:
+	docker run --rm -d \
+		--name myredis \
+		--network dev-network \
+		-p 6379:6379 \
+		redis
+
+
+generate-docs:
+	go run "$(SWAG_PATH)/bin/swag" init 

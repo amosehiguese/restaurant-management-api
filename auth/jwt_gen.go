@@ -40,12 +40,12 @@ func generateNewAccessToken(id uuid.UUID, role int32) (string, error) {
 
 	minCount, _ := strconv.Atoi(os.Getenv("JWT_SECRET_KEY_EXPIRE_MINUTES_COUNT"))
 
-	claims := jwt.MapClaims{}
+	claims := jwt.MapClaims{} 
 
 	claims["id"] = id
 	claims["role"] = role
 	claims["iat"] = time.Now().Unix()
-	claims["eat"] = time.Now().Add(time.Duration(minCount))
+	claims["eat"] = time.Now().Add(time.Minute * time.Duration(minCount)).Unix()
 
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,claims)

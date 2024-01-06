@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/amosehiguese/restaurant-api/log"
 )
@@ -28,4 +29,21 @@ func  paginate(w http.ResponseWriter, r *http.Request) (*int, *int, error) {
 	start := (pageNum - 1) * pageSize
 	end := 	start + pageSize
 	return &start, &end, nil
+}
+
+func parseDate(dateString string) time.Time {
+	parsedTime, err := time.Parse("2006-01-02", dateString)
+	if err != nil {
+		l.Log.Fatal(err.Error())
+	}
+	return parsedTime
+}
+
+
+func parseTime(timeString string) time.Time {
+	parsedTime, err := time.Parse("15:04:05", timeString)
+	if err != nil {
+		l.Log.Fatal(err.Error())
+	}
+	return parsedTime
 }

@@ -36,7 +36,7 @@ CREATE TYPE restaurant_table_status AS ENUM ('occupied', 'available');
 
 CREATE TABLE IF NOT EXISTS restaurant_table(
     id              UUID DEFAULT uuid_generate_v4 () PRIMARY KEY,
-    name            VARCHAR (200) NOT NULL,
+    number          INT  NOT NULL,
     capacity        INT  NOT NULL,
     status          restaurant_table_status   NOT NULL
 
@@ -85,29 +85,3 @@ CREATE TABLE IF NOT EXISTS users(
 
 
 
-
-CREATE OR REPLACE FUNCTION update_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-NEW.updated_at = NOW();
-RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER e_u_ctd
-AFTER UPDATE
-ON orders
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER e_u_ctd
-AFTER UPDATE
-ON reservation
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER e_u_ctd
-AFTER UPDATE
-ON users
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at();

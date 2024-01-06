@@ -1,7 +1,6 @@
 package log
 
 import (
-	"log"
 	"os"
 
 	"go.uber.org/zap"
@@ -28,10 +27,10 @@ type Logger struct {
 }
 
 func NewLog() *Logger  {
-	file, err := os.OpenFile("log/restaurant.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalln("Failed to open log file", err)
-	}
+	// file, err := os.OpenFile("github.com/amosehiguese/restaurant-api/log/restaurant.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	// if err != nil {
+	// 	log.Fatalln("Failed to open log file", err)
+	// }
 
 	l := Logger{}
 	l.Log = zap.New(
@@ -43,20 +42,20 @@ func NewLog() *Logger  {
 
 	)
 
-	l.Log = l.Log.WithOptions(
-		zap.WrapCore(
-			func(c zapcore.Core) zapcore.Core {
-				return zapcore.NewTee(
-					c,
-					zapcore.NewCore(
-						zapcore.NewJSONEncoder(encodeCfg),
-						zapcore.Lock(zapcore.AddSync(file)),
-						zapcore.InfoLevel,
-					),
-				)
-			},
-		),
-	)
+	// l.Log = l.Log.WithOptions(
+	// 	zap.WrapCore(
+	// 		func(c zapcore.Core) zapcore.Core {
+	// 			return zapcore.NewTee(
+	// 				c,
+	// 				zapcore.NewCore(
+	// 					zapcore.NewJSONEncoder(encodeCfg),
+	// 					zapcore.Lock(zapcore.AddSync(file)),
+	// 					zapcore.InfoLevel,
+	// 				),
+	// 			)
+	// 		},
+	// 	),
+	// )
 	defer func() {
 		_ = l.Log.Sync()
 	}()

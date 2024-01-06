@@ -12,7 +12,15 @@ import (
 	"github.com/google/uuid"
 )
 
-
+// GetUsers returns all users
+// @Summary List all users
+// @Description Get all users stored in the database
+// @Tags User
+// @Produce json
+// @Router /users [get]
+// @Success 200 {object} models.User
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 500 {object} http.StatusInternalServerError
 func GetUsers(w http.ResponseWriter, r *http.Request) {
 	s, e, err := paginate(w, r)
 	if err != nil {
@@ -28,7 +36,6 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	q := store.GetQuery()
 
 	result, err := q.GetAllUsers(ctx)
-	fmt.Println(result)
 	if err != nil {
 		l.Error(err.Error())
 		json.NewEncoder(w).Encode(resp{
@@ -43,7 +50,7 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 		result = result[*s:*e]
 	} else if *e >= len(result) && *s < len(result) {
 		result = result[*s:]
-	} else {
+	} else if *e >= len(result) && *s >= len(result) && result != nil {
 		*s = 0
 		*e = pageSize
 		result = result[*s:*e]
@@ -57,6 +64,16 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// RetrieveUser renders the user with the given id 
+// @Summary Get user by id
+// @Description RetrieveUser returns a single user by id
+// @Tags User
+// @Produce json
+// @Param id path string true "user id"
+// @Router /users/{id} [get]
+// @Success 200 {object} models.User
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 404 {object} http.StatusNotFound
 func RetrieveUser(w http.ResponseWriter, r *http.Request) {
 	id := getField(r, "id")
 	userID, err := uuid.Parse(id)
@@ -88,6 +105,17 @@ func RetrieveUser(w http.ResponseWriter, r *http.Request) {
 	})	
 }
 
+// UpdateUser modifies the user with the given id 
+// @Summary Modify user by id
+// @Description UpdateUser modifies a single menu by id
+// @Tags User
+// @Produce json
+// @Param id path string true "user id"
+// @Router /users/{id} [patch]
+// @Success 200 {object} models.User
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 422 {object} http.StatusUnprocessableEntity
+// @Failure 500 {object} http.StatusInternalServerError
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	id := getField(r, "id")
 	userID, err := uuid.Parse(id)
@@ -153,6 +181,16 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// CreateRole writes a role to the database
+// @Summary Creates a role
+// @Description Creates a role in the database
+// @Tags Role
+// @Produce json
+// @Router /roles [post]
+// @Success 200 {object} models.Role
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 422 {object} http.StatusUnprocessableEntity
+// @Failure 500 {object} http.StatusInternalServerError
 func CreateRole(w http.ResponseWriter, r *http.Request) {
 	var role models.CreateRoleParams
 	err := json.NewDecoder(r.Body).Decode(&role)
@@ -196,6 +234,15 @@ func CreateRole(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// GetRoles returns all roles
+// @Summary List all roles
+// @Description Get all roles stored in the database
+// @Tags Role
+// @Produce json
+// @Router /roles [get]
+// @Success 200 {object} models.Role
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 500 {object} http.StatusInternalServerError
 func GetRoles(w http.ResponseWriter, r *http.Request) {
 	s, e, err := paginate(w, r)
 	if err != nil {
@@ -238,6 +285,17 @@ func GetRoles(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// UpdateRole modifies the role with the given id 
+// @Summary Modify role by id
+// @Description UpdateRole modifies a single role by id
+// @Tags Role
+// @Produce json
+// @Param id path string true "role id"
+// @Router /roles/{id} [patch]
+// @Success 200 {object} models.Role
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 422 {object} http.StatusUnprocessableEntity
+// @Failure 500 {object} http.StatusInternalServerError
 func UpdateRole(w http.ResponseWriter, r *http.Request) {
 	id := getField(r, "id")
 	roleId, err := strconv.Atoi(id)
@@ -300,3 +358,45 @@ func UpdateRole(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+
+// DeleteRole remove the role with the given id 
+// @Summary Removes role by id
+// @Description Removes a single role by id from the database
+// @Tags Role
+// @Produce json
+// @Param id path string true "role id"
+// @Router /roles/{id} [delete]
+// @Success 200 {object} string
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 500 {object} http.StatusInternalServerError
+func DeleteRole(w http.ResponseWriter, r *http.Request) {
+	id := getField(r, "id")
+	roleID, err := strconv.Atoi(id)
+	if err != nil {
+		l.Error(err.Error())
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusBadRequest,
+			"msg": "Bad request",
+		})
+		return
+	}
+	q := store.GetQuery()
+
+	err = q.DeleteRole(ctx, int32(roleID))
+	if err != nil {
+		l.Error(err.Error())
+		json.NewEncoder(w).Encode(resp{
+			"success": false,
+			"code": http.StatusInternalServerError,
+			"msg": "Internal server error",
+		})
+		return
+	}
+
+	dataResp := fmt.Sprintf("Role with id %s is successfully deleted", id)
+	json.NewEncoder(w).Encode(resp{
+		"success": true,
+		"msg": dataResp,
+	})
+}

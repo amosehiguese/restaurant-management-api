@@ -17,7 +17,7 @@ var (
 	err error
 )
 
-var l = log.NewLog()
+var l *log.Logger
 
 // type Client struct {
 // 	*models.Queries
@@ -26,13 +26,14 @@ var l = log.NewLog()
 // }
 
 
-// func (c *Client) Ping() {
-// 	c.db.Ping()
-// }
+func Ping() error {
+	return db.Ping()
+}
 
 
 func SetUpDB(dbuser, dbpwd, dbhost, dbport, dbname string) {
 	ctx := context.Background()
+	l = log.NewLog()
 	db, err = postgresConn(dbuser, dbpwd, dbhost, dbport, dbname)
 	if err != nil {
 		l.Infoln("unable to connect to db ->", err)

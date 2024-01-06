@@ -12,6 +12,15 @@ import (
 	"github.com/google/uuid"
 )
 
+// GetAllInvoices returns all invoices
+// @Summary List all invoices
+// @Description Get all invoices stored in the database
+// @Tags Invoices
+// @Produce json
+// @Router /invoices [get]
+// @Success 200 {object} models.Invoice
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 500 {object} http.StatusInternalServerError
 func GetAllInvoices(w http.ResponseWriter, r *http.Request){
 	s, e, err := paginate(w, r)
 	if err != nil {
@@ -25,7 +34,7 @@ func GetAllInvoices(w http.ResponseWriter, r *http.Request){
 	}
 
 	q := store.GetQuery()
-	invoices, err := q.GetAllInvoices(ctx)
+	result, err := q.GetAllInvoices(ctx)
 	if err != nil {
 		l.Error(err.Error())
 		json.NewEncoder(w).Encode(resp{
@@ -36,13 +45,33 @@ func GetAllInvoices(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
+	if *e < len(result) && len(result[*s:*e]) == pageSize {
+		result = result[*s:*e]
+	} else if *e >= len(result) && *s < len(result) {
+		result = result[*s:]
+	} else if *e >= len(result) && *s >= len(result) && result != nil {
+		*s = 0
+		*e = pageSize
+		result = result[*s:*e]
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp{
 		"success": true,
-		"data": invoices[*s:*e],
+		"data": result,
 	})
 }
 
+// CreateInvoice writes an invoice 
+// @Summary Creates an invoice
+// @Description Creates an invoice in the database
+// @Tags Invoices
+// @Produce json
+// @Router /invoices [post]
+// @Success 200 {object} models.Invoice
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 422 {object} http.StatusUnprocessableEntity
+// @Failure 500 {object} http.StatusInternalServerError
 func CreateInvoice(w http.ResponseWriter, r *http.Request){
 	var payload types.InvoicePayload
 	err := json.NewDecoder(r.Body).Decode(&payload)
@@ -95,6 +124,17 @@ func CreateInvoice(w http.ResponseWriter, r *http.Request){
 		"data": result.ID,
 	})
 }
+
+// RetrieveInvoice renders the invoice with the given id 
+// @Summary Get invoice by id
+// @Description RetrieveInvoice returns a single invoice by id
+// @Tags Invoice
+// @Produce json
+// @Param id path string true "invoice id"
+// @Router /invoices/{id} [get]
+// @Success 200 {object} models.Invoice
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 404 {object} http.StatusNotFound
 func RetrieveInvoice(w http.ResponseWriter, r *http.Request){
 	id := getField(r, "id")
 	invoiceID, err := uuid.Parse(id)
@@ -126,6 +166,18 @@ func RetrieveInvoice(w http.ResponseWriter, r *http.Request){
 		"data": invoice,
 	})
 }
+
+// UpdateInvoice modifies the invoice with the given id 
+// @Summary Modify invoice by id
+// @Description UpdateInvoice modifies a single invoice by id
+// @Tags Invoice
+// @Produce json
+// @Param id path string true "invoice id"
+// @Router /invoices/{id} [patch]
+// @Success 200 {object} models.Invoice
+// @Failure 400 {object} http.StatusBadRequest
+// @Failure 422 {object} http.StatusUnprocessableEntity
+// @Failure 500 {object} http.StatusInternalServerError
 func UpdateInvoice(w http.ResponseWriter, r *http.Request){
 	id := getField(r, "id")
 	invoiceID, err := uuid.Parse(id)
@@ -141,7 +193,7 @@ func UpdateInvoice(w http.ResponseWriter, r *http.Request){
 	}
 
 
-	var payload types.InvoicePayload
+	var payload types.UpdateInvoicePayload
 	err = json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		l.Errorln(err)
@@ -165,11 +217,11 @@ func UpdateInvoice(w http.ResponseWriter, r *http.Request){
 	}
 
 	invoice := models.UpdateInvoiceParams{
-		OrderID: payload.OrderID,
 		TotalAmount: payload.TotalAmount,
 		Tax: payload.Tax,
 		Discount: payload.Discount,
 		GrandTotal: payload.GrandTotal,
+		ID: invoiceID,
 	}
 
 	q := store.GetQuery()
@@ -185,7 +237,7 @@ func UpdateInvoice(w http.ResponseWriter, r *http.Request){
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	str := fmt.Sprintf("Successfully update invoice with id %s", invoiceID)
+	str := fmt.Sprintf("Successfully updated invoice with id %s", invoiceID)
 	json.NewEncoder(w).Encode(resp{
 		"success":true,
 		"msg": str,
