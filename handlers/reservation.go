@@ -168,7 +168,6 @@ func RetrieveReservation(w http.ResponseWriter, r *http.Request) {
 	q := store.GetQuery()
 	reservation, err := q.RetrieveReservation(ctx, reservationID)
 	if err != nil {
-		http.Error(w, "reservation not found", http.StatusNotFound)
 		json.NewEncoder(w).Encode(resp{
 			"success": false,
 			"code": http.StatusNotFound,

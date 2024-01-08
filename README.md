@@ -19,7 +19,7 @@ make start
 - Pagination
 - Documentation as Code with http-swagger
 
-### Deployment CI/CD Stack
+### Deployment and CI/CD Stack
 - Docker
 - Kubernetes (AWS EKS)
 - Helm
