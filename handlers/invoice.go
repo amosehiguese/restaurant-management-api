@@ -121,7 +121,7 @@ func CreateInvoice(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp{
 		"success": true,
-		"data": result.ID,
+		"invoice_id": result.ID,
 	})
 }
 
@@ -163,7 +163,7 @@ func RetrieveInvoice(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp{
 		"success": true,
-		"data": invoice,
+		"invoice": invoice,
 	})
 }
 

@@ -58,9 +58,25 @@ func GetAllReservations(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp{
 		"success": true,
-		"data": result,
+		"data": res(result),
 	})
 }
+
+var res = func(result []models.Reservation) []types.ReservationResponse {
+				var res []types.ReservationResponse
+				for _, r := range result{
+					res = append(res, types.ReservationResponse{
+						ID: r.ID,
+						TableID: r.TableID,
+						ReservationDate: r.ReservationDate,
+						ReservationTime: r.ReservationTime,
+						Status: r.Status,
+						CreatedAt: r.CreatedAt,
+						UpdatedAt: r.UpdatedAt.Time,
+					})
+				}
+			return res
+			}
 
 // CreateReservation writes a reservation to the database
 // @Summary Creates a reservation
@@ -121,7 +137,7 @@ func CreateReservation(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp{
 		"success": true,
-		"data": result.ID,
+		"reservation_id": result.ID,
 	})
 }
 
@@ -152,6 +168,7 @@ func RetrieveReservation(w http.ResponseWriter, r *http.Request) {
 	q := store.GetQuery()
 	reservation, err := q.RetrieveReservation(ctx, reservationID)
 	if err != nil {
+		http.Error(w, "reservation not found", http.StatusNotFound)
 		json.NewEncoder(w).Encode(resp{
 			"success": false,
 			"code": http.StatusNotFound,
@@ -163,7 +180,15 @@ func RetrieveReservation(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp{
 		"success": true,
-		"data": reservation,
+		"reservation": types.ReservationResponse{
+			ID: reservation.ID,
+			TableID: reservation.TableID,
+			ReservationDate: reservation.ReservationDate,
+			ReservationTime: reservation.ReservationTime,
+			Status: reservation.Status,
+			CreatedAt: reservation.CreatedAt,
+			UpdatedAt: reservation.CreatedAt,
+		},
 	})
 
 }

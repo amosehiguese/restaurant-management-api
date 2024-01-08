@@ -38,6 +38,9 @@ func Routes(r *chi.Mux) {
 			r.Post("/auth/signout",SignOut)
 			r.Post("/token/renew", RenewTokens)
 
+			// users
+			r.Get("/users/{id}", RetrieveUser)
+
 			// reservations
 			r.Get("/reservations", GetAllReservations)
 			r.Post("/reservations", CreateReservation)
@@ -47,7 +50,6 @@ func Routes(r *chi.Mux) {
 
 
 			// invoices
-			r.Get("/invoices", GetAllInvoices)	
 			r.Post("/invoices", CreateInvoice)
 			r.Get("/invoices/{id}", RetrieveInvoice)	
 			
@@ -61,7 +63,7 @@ func Routes(r *chi.Mux) {
 			// orderItems
 			r.Get("/orders/{id}/items", GetAllOrderItems)
 			r.Put("/orders/{id}/items", CreateOrderItem)
-			r.Put("/orders/{id}/items/{itemID}", UpdateOrderItem)
+			r.Patch("/orders/{id}/items/{itemID}", UpdateOrderItem)
 			r.Delete("/orders/{id}/items/{itemID}", RemoveSpecificOrderItem)							
 		},)
 
@@ -85,7 +87,6 @@ func Routes(r *chi.Mux) {
 
 			// user
 			r.Get("/users", GetUsers)
-			r.Get("/users/{id}", RetrieveUser)
 			r.Patch("/users/{id}", UpdateUser)
 
 			// roles
@@ -95,6 +96,7 @@ func Routes(r *chi.Mux) {
 			r.Delete("/roles/{id}", DeleteRole)	
 
 			// invoices
+			r.Get("/invoices", GetAllInvoices)	
 			r.Patch("/invoices/{id}", UpdateInvoice)			
 		},)
 	})

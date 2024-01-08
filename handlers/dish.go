@@ -146,7 +146,7 @@ func CreateMenuDish(w http.ResponseWriter, r *http.Request)  {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp{
 		"success": true,
-		"data": result.ID,
+		"dish_id": result.ID,
 	})
 }
 
@@ -207,7 +207,7 @@ func RetrieveMenuDish(w http.ResponseWriter, r *http.Request)  {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp{
 		"success": true,
-		"data": result,
+		"dish": result,
 	})
 }
 

@@ -1,6 +1,6 @@
 MIGRATIONS_FOLDER = $(PWD)/db/migrations
-SWAG_PATH ?= $(go env GOPATH)
 VERSION ?= $(shell git describe --match 'v[0-9]*' --tags --always)
+TAG ?= 1.0.0
 DBUSER = $(DB_USER)
 DBPORT = $(DB_PORT)
 DBNAME = $(DB_NAME)
@@ -13,7 +13,7 @@ test:
 
 .PHONY: build
 build: 
-	@go build -ldflags "-X main.version=$(VERSION)" -o bin/restuarant
+	go build -ldflags "-X main.version=$(VERSION)" -o bin/restuarant
 
 .PHONY:start
 start: build
@@ -35,6 +35,9 @@ mig-down:
 mig-force:
 	migrate -database "$(DATABASE_URL)" -path $(MIGRATIONS_FOLDER) force 1
 
+build-docker:
+	docker build -t github.com/amosehiguese/restuarant:$(TAG) .
+
 docker.postgres:
 	docker run --rm -d \
 		--name postgresql \
@@ -51,6 +54,14 @@ docker.redis:
 		-p 6379:6379 \
 		redis
 
+docker.stop: docker.stop.postgres docker.stop.redis
 
-generate-docs:
-	go run "$(SWAG_PATH)/bin/swag" init 
+docker.stop.postgres:
+	docker stop postgresql
+
+docker.stop.redis:
+	docker stop myredis
+
+swag:
+	swag init
+

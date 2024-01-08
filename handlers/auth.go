@@ -138,6 +138,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userId := foundUser.ID
+	
 
 	connRedis, err := store.RedisConn()
 	if err != nil {

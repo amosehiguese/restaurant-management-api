@@ -58,8 +58,11 @@ func GetAllTables(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp{
 		"success": true,
 		"data": result,
+		
+
 	})
 }
+
 
 // CreateTable writes a table to the database
 // @Summary Creates a table
@@ -117,7 +120,7 @@ func CreateTable(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp{
 		"success": true,
-		"data": result.ID,
+		"table_id": result.ID,
 	})
 }
 
@@ -158,7 +161,7 @@ func RetrieveTable(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp{
 		"success": true,
-		"data": table,
+		"table": table,
 	})
 }
 
