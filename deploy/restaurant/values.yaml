@@ -1,0 +1,14 @@
+namespace: api
+container:
+  name: restaurant-api
+  port: 8080
+  image:
+    repository: ''
+    tag: ''
+request:
+  cpu: 200m
+  memory: 180Mi
+limit:
+  cpu: 300m
+  memory: 300Mi
+replicas: 3

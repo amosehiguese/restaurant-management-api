@@ -12,6 +12,8 @@ import (
 
 
 func Routes(r *chi.Mux) {
+	r.HandleFunc("/_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "ok") })
+
 	r.HandleFunc("/swagger", func(w http.ResponseWriter, r *http.Request) {
     http.Redirect(w, r, r.RequestURI+"/", http.StatusMovedPermanently)
 	})
@@ -40,6 +42,7 @@ func Routes(r *chi.Mux) {
 
 			// users
 			r.Get("/users/{id}", RetrieveUser)
+			r.Patch("/users/{id}", UpdateUser)
 
 			// reservations
 			r.Get("/reservations", GetAllReservations)
@@ -87,7 +90,6 @@ func Routes(r *chi.Mux) {
 
 			// user
 			r.Get("/users", GetUsers)
-			r.Patch("/users/{id}", UpdateUser)
 
 			// roles
 			r.Get("/roles", GetRoles)

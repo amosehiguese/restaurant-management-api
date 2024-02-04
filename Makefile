@@ -36,7 +36,7 @@ mig-force:
 	migrate -database "$(DATABASE_URL)" -path $(MIGRATIONS_FOLDER) force 1
 
 build-docker:
-	docker build -t github.com/amosehiguese/restuarant:$(TAG) .
+	docker build -t github.com/amosehiguese/restaurant-api:$(TAG) .
 
 docker.postgres:
 	docker run --rm -d \
