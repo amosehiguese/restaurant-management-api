@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"fmt"
 
 	"github.com/amosehiguese/restaurant-api/middleware"
 	"github.com/go-chi/chi/v5"

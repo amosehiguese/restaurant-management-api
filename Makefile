@@ -1,10 +1,7 @@
 MIGRATIONS_FOLDER = $(PWD)/db/migrations
 VERSION ?= $(shell git describe --match 'v[0-9]*' --tags --always)
 TAG ?= 1.0.0
-DBUSER = $(DB_USER)
-DBPORT = $(DB_PORT)
-DBNAME = $(DB_NAME)
-DBPASSWORD = $(DB_PASSWORD)
+
 
 
 .PHONY: test
@@ -38,23 +35,12 @@ mig-force:
 build-docker:
 	docker build -t github.com/amosehiguese/restaurant-api:$(TAG) .
 
-docker.postgres:
-	docker run --rm -d \
-		--name postgresql \
-		-e POSTGRES_USER=$(DBUSER) \
-		-e POSTGRES_PASSWORD=$(DBPASSWORD) \
-		-e POSTGRES_DB=$(DBNAME) \
-		-p 5432:5432 \
-		bitnami/postgresql:latest
-
 docker.redis:
 	docker run --rm -d \
 		--name myredis \
 		--network dev-network \
 		-p 6379:6379 \
 		redis
-
-docker.stop: docker.stop.postgres docker.stop.redis
 
 docker.stop.postgres:
 	docker stop postgresql

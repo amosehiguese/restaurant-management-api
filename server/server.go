@@ -18,7 +18,7 @@ import (
 
 
 var (
-	socketAddr = flag.String("socketaddr", "127.0.0.1:8080", "socket address to listen on")
+	socketAddr = flag.String("socketaddr", ":8080", "socket address to listen on")
 	cert = flag.String("cert", "", "TLS certificate")
 	pkey = flag.String("pkey", "", "TLS private key")
 )
