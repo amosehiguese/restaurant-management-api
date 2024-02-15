@@ -7,6 +7,7 @@ FROM alpine:3.18.4
 RUN apk add --no-cache ca-certificates
 WORKDIR /restaurant
 COPY --from=build /bin/restaurant /bin/restaurant
+COPY ./db/migrations/ ./db/migrations
 
 EXPOSE 8080
 ENTRYPOINT ["/bin/restaurant"]

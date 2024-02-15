@@ -2,20 +2,20 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: '{{ .Values.container.name }}-{{ .Values.environment }}'
-  namespace: { { .Values.namespace } }
+  namespace: {{ .Values.environment }}
   labels:
-    app: { { .Values.container.name } }
+    app: {{ .Values.container.name }}
 spec:
-  replicas: { { .Values.replicas } }
+  replicas: {{ .Values.replicas }}
   selector:
-    matchlabels:
-      app: { { .Values.container.name } }
-      env: { { .Values.environment } }
+    matchLabels:
+      app: {{ .Values.container.name }}
+      env: {{ .Values.environment }}
   template:
     metadata:
       labels:
-        app: { { .Values.container.name } }
-        env: { { .Values.environment } }
+        app: {{ .Values.container.name }}
+        env: {{ .Values.environment }}
     spec:
       terminationGracePeriodSeconds: 5
       securityContext:
@@ -24,7 +24,7 @@ spec:
         runAsNonRoot: true
         runAsUser: 1000
       containers:
-        - name: { { .Values.container.name } }
+        - name: {{ .Values.container.name }}
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -34,30 +34,30 @@ spec:
                 - NET_BIND_SERVICE
             privileged: false
             readOnlyRootFilesystem: true
-          image: '{{ .Values.image.repository }}:{{ .Values.image.tag }}'
+          image: '{{ .Values.container.image.repository }}:{{ .Values.container.image.tag }}'
           ports:
-            - containerPort: { { .Values.container.port } }
+            - containerPort: {{ .Values.container.port }}
           volumeMounts:
             - name: '{{ .Values.container.name }}-secret-volume'
               mountPath: '/secrets/'
               readOnly: true
           resources:
             requests:
-              cpu: { { .Values.request.cpu } }
-              memory: { { .Values.request.memory } }
+              cpu: {{ .Values.request.cpu }}
+              memory: {{ .Values.request.memory }}
             limits:
-              cpu: { { .Values.limit.cpu } }
-              memory: { { .Values.limit.memory } }
+              cpu: {{ .Values.limit.cpu }}
+              memory: {{ .Values.limit.memory }}
           readinessProbe:
             httpGet:
               path: '/_healthz'
-              port: { { .Values.container.port } }
+              port: {{ .Values.container.port }}
             initialDelaySeconds: 20
             periodSeconds: 15
           livenessProbe:
             httpGet:
               path: '/_healthz'
-              port: { { .Values.container.port } }
+              port: {{ .Values.container.port }}
             initialDelaySeconds: 20
             periodSeconds: 15
       volumes:
@@ -66,17 +66,18 @@ spec:
             secretName: '{{ .Values.container.name }}-secrets'
 
 ---
-apiVersion: apps/v1
+apiVersion: v1
 kind: Service
 metadata:
-  name: { { .Values.container.name } }
+  name: {{ .Values.container.name }}
+  namespace: {{ .Values.environment }}
   labels:
-    app: { { .Values.container.name } }
+    app: {{ .Values.container.name }}
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
-    app: { { .Values.container.name } }
+    app: {{ .Values.container.name }}
   ports:
     - port: 80
       protocol: TCP
-      targetPort: { { .Values.container.port } }
+      targetPort: {{ .Values.container.port }}

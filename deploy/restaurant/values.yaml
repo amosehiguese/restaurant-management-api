@@ -1,6 +1,12 @@
-# Server Values
+# Global
+global:
+  postgresql:
+    password: ""
+    database: ""
+
+
 environment: prod
-namespace: api
+namespace: api  
 container:
   name: restaurant-api
   port: 8080
@@ -16,12 +22,12 @@ limit:
 replicas: 3
 
 # Redis Values
-redis:
-  name: redis
-  replicas: 3
-  labels: 
-    app: redis
-  port: 6379
-  image:
-    repository: redis
-    tag: 7.2.3-alpine
+# redis:
+#   name: redis
+#   replicas: 3
+#   labels: 
+#     app: redis
+#   port: 6379
+#   image:
+#     repository: redis
+#     tag: 7.2.3-alpine

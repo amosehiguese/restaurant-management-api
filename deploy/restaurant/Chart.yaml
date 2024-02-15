@@ -26,3 +26,6 @@ dependencies:
 - name: postgresql-ha
   repository: https://charts.bitnami.com/bitnami
   version: 13.2.1
+- name: redis-cluster
+  repository: https://charts.bitnami.com/bitnami
+  version: 9.5.2

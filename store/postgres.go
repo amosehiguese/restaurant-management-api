@@ -19,11 +19,11 @@ func postgresConn(dbuser, dbpwd, dbhost, dbport, dbname string) (*sql.DB, error)
 	if err != nil {
 		return nil, errX
 	}
-
 	if err := dbX.Ping(); err != nil {
 		defer dbX.Close()
 		return nil, err
 	}
+	
 
 	log.Println("successfully connected to postgres database")
 
@@ -31,9 +31,7 @@ func postgresConn(dbuser, dbpwd, dbhost, dbport, dbname string) (*sql.DB, error)
 }
 
 func postgresMigration(dbuser, dbpwd, dbhost, dbport, dbname string) error {
-	// := os.Getenv("POSTGRES_URI")
 	postgresURI := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=disable",dbuser, dbpwd, dbhost, dbport, dbname )
-	// POSTGRES_URI='postgres://postgres:password123@localhost:5432/restaurantdb?sslmode=disable'
 
 	migSourceURL := "file://db/migrations"
 

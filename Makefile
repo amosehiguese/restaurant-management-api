@@ -1,4 +1,5 @@
 MIGRATIONS_FOLDER = $(PWD)/db/migrations
+ENVIRONMENT = $(ENVIRONMENT)
 VERSION ?= $(shell git describe --match 'v[0-9]*' --tags --always)
 TAG ?= 1.0.0
 
@@ -34,6 +35,12 @@ mig-force:
 
 build-docker:
 	docker build -t github.com/amosehiguese/restaurant-api:$(TAG) .
+
+helm-dep:
+	helm dependency update
+
+helm-install: 
+	sops -d deploy/restaurant/$(ENVIRONMENT)-secrets.yaml > temp-$(ENVIRONMENT)-secrets.yaml && helm -n $(ENVIRONMENT) upgrade --install $(ENVIRONMENT)-restaurant-api --values values.yaml --values temp-$(ENVIRONMENT)-secrets.yaml ./deploy/restaurant && rm temp-$(ENVIRONMENT)-secrets.yaml
 
 docker.redis:
 	docker run --rm -d \
