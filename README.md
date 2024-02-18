@@ -21,13 +21,10 @@ make start
 
 ### Deployment and CI/CD Stack
 - Docker
-- Kubernetes (AWS EKS)
 - Helm
-- AWS IAM
-- Cloud Formation
-- Code Build
-- Code Pipeline
-
+- GKE
+- Github Actions
+- Terraform
 ### API ENDPOINTS
 
 `GET '/api/v1/menu'`
