@@ -1,12 +1,13 @@
 # Global
 global:
   postgresql:
+    password: "password123"
+    database: "restaurantdb"
+  redis:
     password: ""
-    database: ""
 
 
 environment: prod
-namespace: api  
 container:
   name: restaurant-api
   port: 8080
