@@ -36,6 +36,9 @@ mig-force:
 build-docker:
 	docker build -t github.com/amosehiguese/restaurant-api:$(TAG) .
 
+kind-docker:
+    kind load docker-image github.com/amosehiguese/restaurant-api:$(TAG)
+
 helm-dep:
 	helm dependency update
 
