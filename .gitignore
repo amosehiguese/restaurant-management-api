@@ -1,5 +1,5 @@
-.env
-server/restaurant.log
-log/restaurant.log
-bin/
-key.txt
+*.env
+*/server/restaurant.log
+*/log/restaurant.log
+*/bin/
+*/key.txt
